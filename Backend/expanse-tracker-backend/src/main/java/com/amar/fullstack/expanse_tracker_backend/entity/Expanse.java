@@ -20,7 +20,8 @@ public class Expanse {
     private Double amount;
 
     @Column(nullable = false)
-    private String category;
+    @Enumerated(EnumType.STRING)
+    private ExpanseCategory category;
 
     private String description;
 
@@ -36,7 +37,7 @@ public class Expanse {
     public Expanse() {
     }
 
-    public Expanse(Long id, String name, Double amount, String category, String description, LocalDateTime expanseDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Expanse(Long id, String name, Double amount, ExpanseCategory category, String description, LocalDateTime expanseDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.amount = amount;
@@ -82,11 +83,11 @@ public class Expanse {
         this.amount = amount;
     }
 
-    public String getCategory() {
+    public ExpanseCategory getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(ExpanseCategory category) {
         this.category = category;
     }
 
