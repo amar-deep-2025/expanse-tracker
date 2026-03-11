@@ -14,7 +14,7 @@ public class ExpanseRequestDto {
     @Positive(message = "Amount must be positive")
     private Double amount;
 
-    @NotBlank(message = "Category is required")
+    @NotNull(message = "Category is required")
     private ExpanseCategory category;
 
     private String description;
