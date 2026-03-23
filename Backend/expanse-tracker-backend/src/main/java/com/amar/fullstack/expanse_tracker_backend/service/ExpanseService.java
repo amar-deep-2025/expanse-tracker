@@ -6,6 +6,8 @@ import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ExpanseService {
 
@@ -30,6 +32,11 @@ public class ExpanseService {
         return mapToResponse(savedExpanse);
     }
 
+    public List<ExpanseResponseDto> getAll(ExpanseRequestDto dto) {
+        List<Expanse> expanses = expRepo.findAll();
+        return expanses.stream().map(this::mapToResponse).toList();
+    }
+
     private ExpanseResponseDto mapToResponse(Expanse expanse) {
 
         ExpanseResponseDto responseDto = new ExpanseResponseDto();
@@ -37,6 +44,7 @@ public class ExpanseService {
         responseDto.setId(expanse.getId());
         responseDto.setName(expanse.getName());
         responseDto.setAmount(expanse.getAmount());
+        responseDto.setDescription(expanse.getDescription());
         responseDto.setCategory(expanse.getCategory());
         responseDto.setCreatedAt(expanse.getCreatedAt());
         responseDto.setUpdatedAt(expanse.getUpdatedAt());
