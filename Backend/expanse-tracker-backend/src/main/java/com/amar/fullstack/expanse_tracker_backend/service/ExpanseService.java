@@ -37,6 +37,11 @@ public class ExpanseService {
         return expanses.stream().map(this::mapToResponse).toList();
     }
 
+    public ExpanseResponseDto getById(Long id) {
+        Expanse expanse = expRepo.findById(id).orElseThrow(() -> new RuntimeException("Expanse not find"));
+        return mapToResponse(expanse);
+    }
+
     private ExpanseResponseDto mapToResponse(Expanse expanse) {
 
         ExpanseResponseDto responseDto = new ExpanseResponseDto();
