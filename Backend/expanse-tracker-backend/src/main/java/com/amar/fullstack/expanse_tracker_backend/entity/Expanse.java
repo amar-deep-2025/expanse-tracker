@@ -19,8 +19,8 @@ public class Expanse {
     @Column(nullable = false)
     private Double amount;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @ManyToOne
+    @JoinColumn(name="category_id", nullable = false)
     private ExpanseCategory category;
 
     private String description;
@@ -122,4 +122,6 @@ public class Expanse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+
 }
