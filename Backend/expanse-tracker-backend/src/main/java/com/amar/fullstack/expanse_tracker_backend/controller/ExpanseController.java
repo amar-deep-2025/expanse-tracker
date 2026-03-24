@@ -1,15 +1,12 @@
 package com.amar.fullstack.expanse_tracker_backend.controller;
-
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseRequestDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
-import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.service.ExpanseService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/expanses")
@@ -21,24 +18,38 @@ public class ExpanseController {
         this.expService = expService;
     }
 
-    @PostMapping()
-    public ExpanseResponseDto create(@Valid @RequestBody ExpanseRequestDto dto) {
-        return expService.createExpanse(dto);
+    // ================= CREATE =================
+    @PostMapping
+    public ResponseEntity<ExpanseResponseDto> create(
+            @Valid @RequestBody ExpanseRequestDto dto) {
+        return ResponseEntity.ok(expService.createExpanse(dto));
     }
 
-    @GetMapping()
-    public List<ExpanseResponseDto> findAll() {
-        return expService.getAll(null);
+    // ================= GET ALL =================
+    @GetMapping
+    public ResponseEntity<List<ExpanseResponseDto>> findAll() {
+        return ResponseEntity.ok(expService.getAll());
     }
 
+    // ================= GET BY ID =================
     @GetMapping("/{id}")
-    public ExpanseResponseDto getById(@PathVariable Long id) {
-        ExpanseResponseDto expanseResponseDto = expService.getById(id);
-        return expanseResponseDto;
+    public ResponseEntity<ExpanseResponseDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(expService.getById(id));
     }
 
+    // ================= UPDATE =================
     @PutMapping("/{id}")
-    public ExpanseResponseDto update(@PathVariable Long id, @Valid @RequestBody ExpanseRequestDto dto) {
-        return expService.updateExpanse(id, dto);
+    public ResponseEntity<ExpanseResponseDto> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ExpanseRequestDto dto) {
+
+        return ResponseEntity.ok(expService.updateExpanse(id, dto));
+    }
+
+    // ================= DELETE =================
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        expService.deleteExpanse(id);
+        return ResponseEntity.noContent().build(); // 204
     }
 }
