@@ -36,4 +36,9 @@ public class ExpanseController {
         ExpanseResponseDto expanseResponseDto = expService.getById(id);
         return expanseResponseDto;
     }
+
+    @PutMapping("/{id}")
+    public ExpanseResponseDto update(@PathVariable Long id, @Valid @RequestBody ExpanseRequestDto dto) {
+        return expService.updateExpanse(id, dto);
+    }
 }
