@@ -42,6 +42,17 @@ public class ExpanseService {
         return mapToResponse(expanse);
     }
 
+    public ExpanseResponseDto updateExpanse(Long id, ExpanseRequestDto dto) {
+        Expanse expanse = expRepo.findById(id).orElseThrow(() -> new RuntimeException("Expanse not find"));
+        expanse.setName(dto.getName());
+        expanse.setAmount(dto.getAmount());
+        expanse.setDescription(dto.getDescription());
+        expanse.setCategory(dto.getCategory());
+        Expanse updatedExpanse = expRepo.save(expanse);
+        return mapToResponse(updatedExpanse);
+    }
+
+
     private ExpanseResponseDto mapToResponse(Expanse expanse) {
 
         ExpanseResponseDto responseDto = new ExpanseResponseDto();
@@ -62,8 +73,9 @@ public class ExpanseService {
 
         expanse.setName(dto.getName());
         expanse.setAmount(dto.getAmount());
+        expanse.setDescription(dto.getDescription());
         expanse.setCategory(dto.getCategory());
-        expanse.setCategory(dto.getCategory());
+
         return expanse;
     }
 }
