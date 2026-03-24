@@ -3,8 +3,11 @@ package com.amar.fullstack.expanse_tracker_backend.service;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseRequestDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
+import com.amar.fullstack.expanse_tracker_backend.entity.ExpanseCategory;
+import com.amar.fullstack.expanse_tracker_backend.repository.CategoryRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -12,70 +15,127 @@ import java.util.List;
 public class ExpanseService {
 
     private final ExpanseRepository expRepo;
+    private final CategoryRepository categoryRepo;
 
-    public ExpanseService(ExpanseRepository expRepo) {
+    public ExpanseService(ExpanseRepository expRepo,
+                          CategoryRepository categoryRepo) {
         this.expRepo = expRepo;
-
+        this.categoryRepo = categoryRepo;
     }
 
-    public ExpanseResponseDto createExpanse(ExpanseRequestDto dto) {
+    // ================= CREATE =================
+    public ExpanseResponseDto createExpanse(ExpanseRequestDto dto){
+
+        ExpanseCategory category = getOrCreateCategory(dto.getCategory());
+
+        category.setTotalAmount(safe(category.getTotalAmount()) + dto.getAmount());
+        categoryRepo.save(category);
 
         Expanse expanse = new Expanse();
-
         expanse.setName(dto.getName());
         expanse.setAmount(dto.getAmount());
-        expanse.setCategory(dto.getCategory());
         expanse.setDescription(dto.getDescription());
+        expanse.setCategory(category);
 
-        Expanse savedExpanse = expRepo.save(expanse);
-
-        return mapToResponse(savedExpanse);
+        return mapToResponse(expRepo.save(expanse));
     }
 
-    public List<ExpanseResponseDto> getAll(ExpanseRequestDto dto) {
-        List<Expanse> expanses = expRepo.findAll();
-        return expanses.stream().map(this::mapToResponse).toList();
+    // ================= GET ALL =================
+    public List<ExpanseResponseDto> getAll() {
+        return expRepo.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
+    // ================= GET BY ID =================
     public ExpanseResponseDto getById(Long id) {
-        Expanse expanse = expRepo.findById(id).orElseThrow(() -> new RuntimeException("Expanse not find"));
+        Expanse expanse = expRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expanse not found"));
         return mapToResponse(expanse);
     }
 
+    // ================= UPDATE =================
+    @Transactional
     public ExpanseResponseDto updateExpanse(Long id, ExpanseRequestDto dto) {
-        Expanse expanse = expRepo.findById(id).orElseThrow(() -> new RuntimeException("Expanse not find"));
+
+        Expanse expanse = expRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expanse not found"));
+
+        ExpanseCategory oldCategory = expanse.getCategory();
+        ExpanseCategory newCategory = getOrCreateCategory(dto.getCategory());
+
+        if (!oldCategory.getName().equals(newCategory.getName())) {
+
+            oldCategory.setTotalAmount(
+                    safe(oldCategory.getTotalAmount()) - expanse.getAmount()
+            );
+            categoryRepo.save(oldCategory);
+
+            newCategory.setTotalAmount(
+                    safe(newCategory.getTotalAmount()) + dto.getAmount()
+            );
+
+        } else {
+            double diff = dto.getAmount() - expanse.getAmount();
+            newCategory.setTotalAmount(
+                    safe(newCategory.getTotalAmount()) + diff
+            );
+        }
+
+        categoryRepo.save(newCategory);
+
         expanse.setName(dto.getName());
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
-        expanse.setCategory(dto.getCategory());
-        Expanse updatedExpanse = expRepo.save(expanse);
-        return mapToResponse(updatedExpanse);
+        expanse.setCategory(newCategory);
+
+        return mapToResponse(expRepo.save(expanse));
     }
 
+    // ================= DELETE =================
+    @Transactional
+    public void deleteExpanse(Long id){
+
+        Expanse expanse = expRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expanse not found"));
+
+        ExpanseCategory category = expanse.getCategory();
+
+        category.setTotalAmount(
+                safe(category.getTotalAmount()) - expanse.getAmount()
+        );
+        categoryRepo.save(category);
+
+        expRepo.delete(expanse);
+    }
+
+    // ================= HELPER =================
+    private Double safe(Double value){
+        return value == null ? 0.0 : value;
+    }
+
+    private ExpanseCategory getOrCreateCategory(String name){
+        return categoryRepo.findByName(name)
+                .orElseGet(() -> {
+                    ExpanseCategory cat = new ExpanseCategory();
+                    cat.setName(name);
+                    return categoryRepo.save(cat);
+                });
+    }
 
     private ExpanseResponseDto mapToResponse(Expanse expanse) {
 
-        ExpanseResponseDto responseDto = new ExpanseResponseDto();
+        ExpanseResponseDto dto = new ExpanseResponseDto();
 
-        responseDto.setId(expanse.getId());
-        responseDto.setName(expanse.getName());
-        responseDto.setAmount(expanse.getAmount());
-        responseDto.setDescription(expanse.getDescription());
-        responseDto.setCategory(expanse.getCategory());
-        responseDto.setCreatedAt(expanse.getCreatedAt());
-        responseDto.setUpdatedAt(expanse.getUpdatedAt());
-        return responseDto;
-    }
+        dto.setId(expanse.getId());
+        dto.setName(expanse.getName());
+        dto.setAmount(expanse.getAmount());
+        dto.setDescription(expanse.getDescription());
+        dto.setCategory(expanse.getCategory().getName());
+        dto.setCreatedAt(expanse.getCreatedAt());
+        dto.setUpdatedAt(expanse.getUpdatedAt());
 
-    private Expanse mapToEntity(ExpanseRequestDto dto) {
-
-        Expanse expanse = new Expanse();
-
-        expanse.setName(dto.getName());
-        expanse.setAmount(dto.getAmount());
-        expanse.setDescription(dto.getDescription());
-        expanse.setCategory(dto.getCategory());
-
-        return expanse;
+        return dto;
     }
 }
