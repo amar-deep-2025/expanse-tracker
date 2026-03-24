@@ -15,7 +15,7 @@ public class ExpanseRequestDto {
     private Double amount;
 
     @NotNull(message = "Category is required")
-    private ExpanseCategory category;
+    private String category;
 
     private String description;
 
@@ -35,11 +35,11 @@ public class ExpanseRequestDto {
         this.amount = amount;
     }
 
-    public ExpanseCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(ExpanseCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 

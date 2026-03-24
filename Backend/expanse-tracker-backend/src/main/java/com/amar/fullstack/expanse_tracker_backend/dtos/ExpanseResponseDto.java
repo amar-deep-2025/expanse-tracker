@@ -9,7 +9,7 @@ public class ExpanseResponseDto {
     private Long id;
     private String name;
     private Double amount;
-    private ExpanseCategory category;
+    private String category;
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -38,11 +38,11 @@ public class ExpanseResponseDto {
         this.amount = amount;
     }
 
-    public ExpanseCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(ExpanseCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
@@ -70,4 +70,3 @@ public class ExpanseResponseDto {
         this.updatedAt = updatedAt;
     }
 }
-
