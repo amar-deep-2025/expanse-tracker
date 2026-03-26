@@ -23,7 +23,6 @@ public class ExpanseService {
         this.categoryRepo = categoryRepo;
     }
 
-    // ================= CREATE =================
     public ExpanseResponseDto createExpanse(ExpanseRequestDto dto){
 
         ExpanseCategory category = getOrCreateCategory(dto.getCategory());
@@ -39,8 +38,6 @@ public class ExpanseService {
 
         return mapToResponse(expRepo.save(expanse));
     }
-
-    // ================= GET ALL =================
     public List<ExpanseResponseDto> getAll() {
         return expRepo.findAll()
                 .stream()
@@ -48,14 +45,12 @@ public class ExpanseService {
                 .toList();
     }
 
-    // ================= GET BY ID =================
     public ExpanseResponseDto getById(Long id) {
         Expanse expanse = expRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Expanse not found"));
         return mapToResponse(expanse);
     }
 
-    // ================= UPDATE =================
     @Transactional
     public ExpanseResponseDto updateExpanse(Long id, ExpanseRequestDto dto) {
 
@@ -93,7 +88,6 @@ public class ExpanseService {
         return mapToResponse(expRepo.save(expanse));
     }
 
-    // ================= DELETE =================
     @Transactional
     public void deleteExpanse(Long id){
 
@@ -110,7 +104,6 @@ public class ExpanseService {
         expRepo.delete(expanse);
     }
 
-    // ================= HELPER =================
     private Double safe(Double value){
         return value == null ? 0.0 : value;
     }
