@@ -4,6 +4,7 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseRequestDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.entity.ExpanseCategory;
+import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.repository.CategoryRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class ExpanseService {
         this.categoryRepo = categoryRepo;
     }
 
-    public ExpanseResponseDto createExpanse(ExpanseRequestDto dto){
+    public ExpanseResponseDto createExpanse(ExpanseRequestDto dto, User user){
 
         ExpanseCategory category = getOrCreateCategory(dto.getCategory());
 
@@ -35,6 +36,8 @@ public class ExpanseService {
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
         expanse.setCategory(category);
+        expanse.setUser(user);
+
 
         return mapToResponse(expRepo.save(expanse));
     }
@@ -52,14 +55,17 @@ public class ExpanseService {
     }
 
     @Transactional
-    public ExpanseResponseDto updateExpanse(Long id, ExpanseRequestDto dto) {
+    public ExpanseResponseDto updateExpanse(Long id, ExpanseRequestDto dto, User user) {
 
         Expanse expanse = expRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Expanse not found"));
 
+
+        if (!expanse.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You are not authorized to update this expense");
+        }
         ExpanseCategory oldCategory = expanse.getCategory();
         ExpanseCategory newCategory = getOrCreateCategory(dto.getCategory());
-
         if (!oldCategory.getName().equals(newCategory.getName())) {
 
             oldCategory.setTotalAmount(
@@ -70,16 +76,14 @@ public class ExpanseService {
             newCategory.setTotalAmount(
                     safe(newCategory.getTotalAmount()) + dto.getAmount()
             );
-
         } else {
             double diff = dto.getAmount() - expanse.getAmount();
+
             newCategory.setTotalAmount(
                     safe(newCategory.getTotalAmount()) + diff
             );
         }
-
         categoryRepo.save(newCategory);
-
         expanse.setName(dto.getName());
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
@@ -89,11 +93,14 @@ public class ExpanseService {
     }
 
     @Transactional
-    public void deleteExpanse(Long id){
+    public void deleteExpanse(Long id,User user){
 
         Expanse expanse = expRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Expanse not found"));
 
+        if (!expanse.getUser().getId().equals(user.getId())){
+            throw new RuntimeException("You are not authorized to delete this expense");
+        }
         ExpanseCategory category = expanse.getCategory();
 
         category.setTotalAmount(
@@ -116,6 +123,17 @@ public class ExpanseService {
                     return categoryRepo.save(cat);
                 });
     }
+    public ExpanseResponseDto getById(Long id, User user) {
+
+        Expanse expanse = expRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expanse not found"));
+
+        if (!expanse.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        return mapToResponse(expanse);
+    }
 
     private ExpanseResponseDto mapToResponse(Expanse expanse) {
 
@@ -130,5 +148,12 @@ public class ExpanseService {
         dto.setUpdatedAt(expanse.getUpdatedAt());
 
         return dto;
+    }
+
+    public List<ExpanseResponseDto> getUserExpenses(User user) {
+        return expRepo.findByUserId(user.getId())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }
