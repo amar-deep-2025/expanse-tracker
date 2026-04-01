@@ -4,7 +4,9 @@ import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
-
+    List<Expanse> findByUserId(Long userId);
 }
