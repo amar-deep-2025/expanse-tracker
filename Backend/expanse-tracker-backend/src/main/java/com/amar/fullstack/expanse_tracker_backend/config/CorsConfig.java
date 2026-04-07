@@ -1,4 +1,5 @@
 package com.amar.fullstack.expanse_tracker_backend.config;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
