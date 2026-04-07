@@ -11,9 +11,11 @@ public class DashboardResponse {
     private Map<String, Double> categorySummary;
     private List<ExpanseResponseDto> recentExpenses;
 
-    public DashboardResponse(){}
+    public DashboardResponse() {
+    }
 
-    public DashboardResponse(Double totalExpense, Double monthlyExpense, Double todayExpense, Map<String, Double> categorySummary, List<ExpanseResponseDto> recentExpenses) {
+    public DashboardResponse(Double totalExpense, Double monthlyExpense, Double todayExpense,
+            Map<String, Double> categorySummary, List<ExpanseResponseDto> recentExpenses) {
         this.totalExpense = totalExpense;
         this.monthlyExpense = monthlyExpense;
         this.todayExpense = todayExpense;
