@@ -24,7 +24,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public void register(RegisterRequest request){
+    public void register(RegisterRequest request) {
 
         Optional<User> existUser = userRepo.findByEmail(request.getEmail());
 
@@ -41,11 +41,14 @@ public class AuthService {
         userRepo.save(user);
     }
 
-    public AuthResponse login(AuthRequest request){
+    public AuthResponse login(AuthRequest request) {
 
         User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
+        System.out.println("RAW PASSWORD: " + request.getPassword());
+        System.out.println("DB PASSWORD: " + user.getPassword());
+        System.out.println("MATCH RESULT: " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
@@ -56,9 +59,7 @@ public class AuthService {
                 token,
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
-        );
+                user.getRole().name());
     }
-
 
 }
