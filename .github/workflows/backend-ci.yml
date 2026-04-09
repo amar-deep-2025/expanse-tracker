@@ -21,11 +21,13 @@ jobs:
       - name: Build Backend
         run: |
           cd Backend/expanse-tracker-backend
-          mvn clean install
+          mvn clean install -e -X
 
-
-
-
-
-
-          
+      # 🔥 ADD THIS (MOST IMPORTANT)
+      - name: Print Test Reports
+        if: failure()
+        run: |
+          cd Backend/expanse-tracker-backend
+          echo "===== TEST REPORTS ====="
+          ls target/surefire-reports || true
+          cat target/surefire-reports/*.txt || true
