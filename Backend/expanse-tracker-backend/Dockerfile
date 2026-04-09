@@ -1,25 +1,21 @@
-# Step 1: Build stage
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# ---------- Stage 1: Build ----------
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-# Only pom.xml copy (dependency cache ke liye)
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# Copy all files
+COPY . .
 
-# Ab full project copy
-COPY src ./src
-
-# Build jar
+# Build jar (skip tests)
 RUN mvn clean package -DskipTests
 
-
-# Step 2: Run stage
-FROM eclipse-temurin:21-jdk
+# ---------- Stage 2: Run ----------
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 
-# Copy built jar
-COPY --from=build /app/target/*.jar app.jar
+# Copy jar from builder stage
+COPY --from=builder /app/target/*.jar app.jar
 
-ENTRYPOINT ["java","-jar","app.jar"]
+# Run application
+ENTRYPOINT ["java", "-jar", "app.jar"]
