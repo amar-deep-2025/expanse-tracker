@@ -15,10 +15,10 @@ import java.util.Date;
 public class JwtUtil {
 
     // 🔐 Must be at least 32 characters
-    @Value("${jwt.secret}")
-    private  String SECRET;
+    @Value("${jwt.secret:testsecretkey1234567890testsecretkey1234567890}")
+    private String SECRET;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:3600000}")
     private long EXPIRATION;
 
     private Key getSigningKey() {
