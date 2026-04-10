@@ -1,6 +1,8 @@
 package com.amar.fullstack.expanse_tracker_backend.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +28,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role=Role.USER;
 
+    @CreationTimestamp
+    @Column(updatable = false,nullable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     private String profileImage;
