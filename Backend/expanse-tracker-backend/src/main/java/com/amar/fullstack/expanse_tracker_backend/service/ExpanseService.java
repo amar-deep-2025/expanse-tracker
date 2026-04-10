@@ -4,6 +4,7 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseRequestDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.entity.ExpanseCategory;
+import com.amar.fullstack.expanse_tracker_backend.entity.Type;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.repository.CategoryRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
@@ -33,6 +34,7 @@ public class ExpanseService {
 
         Expanse expanse = new Expanse();
         expanse.setName(dto.getName());
+        expanse.setType(Type.valueOf(dto.getType()));
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
         expanse.setCategory(category);
@@ -141,6 +143,7 @@ public class ExpanseService {
 
         dto.setId(expanse.getId());
         dto.setName(expanse.getName());
+        dto.setType(expanse.getType().name());
         dto.setAmount(expanse.getAmount());
         dto.setDescription(expanse.getDescription());
         dto.setCategory(expanse.getCategory().getName());

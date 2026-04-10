@@ -14,7 +14,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 🔐 Must be at least 32 characters
+    // Must be at least 32 characters
     @Value("${jwt.secret:testsecretkey1234567890testsecretkey1234567890}")
     private String SECRET;
 

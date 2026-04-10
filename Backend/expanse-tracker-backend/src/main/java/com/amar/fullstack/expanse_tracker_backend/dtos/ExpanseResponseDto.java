@@ -8,6 +8,7 @@ public class ExpanseResponseDto {
 
     private Long id;
     private String name;
+    private String type;
     private Double amount;
     private String category;
     private String description;
@@ -68,5 +69,13 @@ public class ExpanseResponseDto {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+     public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

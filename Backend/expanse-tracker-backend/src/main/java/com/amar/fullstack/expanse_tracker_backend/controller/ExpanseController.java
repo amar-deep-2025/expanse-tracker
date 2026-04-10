@@ -28,7 +28,7 @@ public class ExpanseController {
             Authentication auth) {
 
         User user = (User) auth.getPrincipal();
-
+        System.out.println("Type from "+dto.getType());
         return ResponseEntity.ok(expService.createExpanse(dto, user));
     }
 

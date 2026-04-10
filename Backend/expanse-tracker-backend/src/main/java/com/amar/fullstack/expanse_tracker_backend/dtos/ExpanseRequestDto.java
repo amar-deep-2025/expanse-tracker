@@ -19,6 +19,9 @@ public class ExpanseRequestDto {
 
     private String description;
 
+    @NotNull(message = "Type is required")
+    private String type;
+
     public String getName() {
         return name;
     }
@@ -49,5 +52,13 @@ public class ExpanseRequestDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
