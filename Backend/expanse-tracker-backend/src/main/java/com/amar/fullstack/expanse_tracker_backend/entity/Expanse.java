@@ -60,6 +60,7 @@ public class Expanse {
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt=this.createdAt;
         this.expanseDate = LocalDateTime.now();
     }
 
