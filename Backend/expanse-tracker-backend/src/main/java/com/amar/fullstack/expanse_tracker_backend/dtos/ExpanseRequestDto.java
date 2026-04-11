@@ -14,12 +14,12 @@ public class ExpanseRequestDto {
     @Positive(message = "Amount must be positive")
     private Double amount;
 
-    @NotNull(message = "Category is required")
+    @NotBlank(message = "Category is required")
     private String category;
 
     private String description;
 
-    @NotNull(message = "Type is required")
+    @NotBlank(message = "Type is required")
     private String type;
 
     public String getName() {
