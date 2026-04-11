@@ -5,6 +5,8 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.AuthRequest;
 import com.amar.fullstack.expanse_tracker_backend.dtos.AuthResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.RegisterRequest;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
+import com.amar.fullstack.expanse_tracker_backend.exception.InvalidCredentialsExceptions;
+import com.amar.fullstack.expanse_tracker_backend.exception.UserAllreadyExistsException;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,7 @@ public class AuthService {
         Optional<User> existUser = userRepo.findByEmail(request.getEmail());
 
         if (existUser.isPresent()) {
-            throw new RuntimeException("User already exists with this email");
+            throw new UserAllreadyExistsException("User already exists with this email");
         }
 
         User user = new User();
@@ -50,14 +52,14 @@ public class AuthService {
         User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
                     logger.warn("Login failed - email not found: {}", request.getEmail());
-                    return new RuntimeException("Invalid email or password");
+                    return new InvalidCredentialsExceptions("Invalid email or password");
                 });
         boolean isMatch=passwordEncoder.matches(request.getPassword(), user.getPassword());
         logger.debug("Password match result for email {}: {}", request.getEmail(), isMatch);
 
         if (!isMatch){
             logger.warn("Login failed - incorrect password for email: {}", request.getEmail());
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidCredentialsExceptions("Invalid email or password");
         }
 
         String token = jwtUtil.generateToken(user);
