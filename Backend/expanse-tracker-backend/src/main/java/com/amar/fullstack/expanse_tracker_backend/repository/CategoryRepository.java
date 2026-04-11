@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<ExpanseCategory,Long> {
-    Optional<ExpanseCategory> findByName(String name);
+    Optional<ExpanseCategory> findByNameIgnoreCase(String name);
 }
