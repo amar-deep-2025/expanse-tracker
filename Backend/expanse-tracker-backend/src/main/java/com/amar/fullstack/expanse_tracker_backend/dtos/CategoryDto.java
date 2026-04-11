@@ -1,8 +1,14 @@
 package com.amar.fullstack.expanse_tracker_backend.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class CategoryDto {
 
+    @NotBlank(message = "Category name is required")
     private String category;
+
+    @NotNull(message = "Amount is required")
     private Double amount;
 
     public CategoryDto(){}
