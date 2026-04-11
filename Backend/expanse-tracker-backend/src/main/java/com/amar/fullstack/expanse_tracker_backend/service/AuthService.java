@@ -6,6 +6,8 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.AuthResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.RegisterRequest;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
+    private final static Logger logger= LoggerFactory.getLogger(AuthService.class);
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
@@ -39,22 +42,26 @@ public class AuthService {
         user.setPhone(request.getPhone());
 
         userRepo.save(user);
+        logger.info("User registered successfully with email: {}", request.getEmail());
     }
 
     public AuthResponse login(AuthRequest request) {
-
+        logger.info("Login attempt for email: {}", request.getEmail());
         User user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    logger.warn("Login failed - email not found: {}", request.getEmail());
+                    return new RuntimeException("Invalid email or password");
+                });
+        boolean isMatch=passwordEncoder.matches(request.getPassword(), user.getPassword());
+        logger.debug("Password match result for email {}: {}", request.getEmail(), isMatch);
 
-        System.out.println("RAW PASSWORD: " + request.getPassword());
-        System.out.println("DB PASSWORD: " + user.getPassword());
-        System.out.println("MATCH RESULT: " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!isMatch){
+            logger.warn("Login failed - incorrect password for email: {}", request.getEmail());
             throw new RuntimeException("Invalid email or password");
         }
 
         String token = jwtUtil.generateToken(user);
-
+        logger.info("Login successful for email: {}", request.getEmail());
         return new AuthResponse(
                 token,
                 user.getName(),
