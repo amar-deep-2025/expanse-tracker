@@ -1,5 +1,6 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
+import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class UserService {
         return userRepo.findById(id)
                 .orElseThrow(() -> {
                     logger.warn("User not found with id: {}", id);
-                    return new RuntimeException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
     }
 
@@ -54,7 +55,7 @@ public class UserService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warn("User not found");
-                    return new RuntimeException("User not found");
+                    return new ResourceNotFoundException("User not found");
                 });
 
         if (file.isEmpty()) {
