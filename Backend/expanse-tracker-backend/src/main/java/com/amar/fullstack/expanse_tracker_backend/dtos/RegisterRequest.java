@@ -8,19 +8,20 @@ public class RegisterRequest {
     private String name;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Invalid Email Format")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Email format is invalid")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min=5, message = "Password must be at least 5 characters")
+    @Size(min = 5, message = "Password must be at least 5 characters")
     private String password;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be 10 digits")
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\+?[1-9]\\d{7,14}$", message = "Invalid phone number")
     private String phone;
 
-
-    public RegisterRequest(){}
+    public RegisterRequest() {
+    }
 
     public RegisterRequest(String name, String email, String password, String phone) {
         this.name = name;
