@@ -18,7 +18,7 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-    private final static Logger logger= LoggerFactory.getLogger(AuthService.class);
+    private final static Logger logger = LoggerFactory.getLogger(AuthService.class);
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
@@ -54,10 +54,10 @@ public class AuthService {
                     logger.warn("Login failed - email not found: {}", request.getEmail());
                     return new InvalidCredentialsExceptions("Invalid email or password");
                 });
-        boolean isMatch=passwordEncoder.matches(request.getPassword(), user.getPassword());
+        boolean isMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
         logger.debug("Password match result for email {}: {}", request.getEmail(), isMatch);
 
-        if (!isMatch){
+        if (!isMatch) {
             logger.warn("Login failed - incorrect password for email: {}", request.getEmail());
             throw new InvalidCredentialsExceptions("Invalid email or password");
         }
