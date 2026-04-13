@@ -1,4 +1,4 @@
-package com.amar.fullstack.expanse_tracker_backend.Mapping;
+package com.amar.fullstack.expanse_tracker_backend.mapping;
 
 import com.amar.fullstack.expanse_tracker_backend.dtos.UserResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
