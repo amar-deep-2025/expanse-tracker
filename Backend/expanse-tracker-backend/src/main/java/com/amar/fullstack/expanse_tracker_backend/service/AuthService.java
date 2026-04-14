@@ -4,8 +4,10 @@ import com.amar.fullstack.expanse_tracker_backend.config.JwtUtil;
 import com.amar.fullstack.expanse_tracker_backend.dtos.AuthRequest;
 import com.amar.fullstack.expanse_tracker_backend.dtos.AuthResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.RegisterRequest;
+import com.amar.fullstack.expanse_tracker_backend.dtos.ResetPasswordRequest;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.exception.InvalidCredentialsExceptions;
+import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
 import com.amar.fullstack.expanse_tracker_backend.exception.UserAllreadyExistsException;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.slf4j.Logger;
@@ -69,6 +71,33 @@ public class AuthService {
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name());
+    }
+
+    public String forgotPassword(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.warn("Forgot password failed - email not found: {}", email);
+                    return new ResourceNotFoundException("Invalid email");
+                });
+        String token = jwtUtil.generateResetToken(user);
+        logger.info("Forgot password token generated for email: {}", email);
+        return token;
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+        String email = jwtUtil.extractEmail(request.getToken());
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.warn("Reset password failed - email not found: {}", email);
+                    return new InvalidCredentialsExceptions("Invalid token");
+                });
+        if (!jwtUtil.validateToken(request.getToken(), user)) {
+            throw new InvalidCredentialsExceptions("Token expired or invalid");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepo.save(user);
+        logger.info("Password reset successful for email: {}", email);
+
     }
 
 }
