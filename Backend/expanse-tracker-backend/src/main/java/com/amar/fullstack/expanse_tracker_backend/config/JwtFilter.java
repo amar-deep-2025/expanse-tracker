@@ -6,7 +6,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,37 +28,66 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest req,
+                                    HttpServletResponse res,
+                                    FilterChain chain)
+            throws ServletException, IOException {
 
-        String header=req.getHeader("Authorization");
-        String path=req.getServletPath();
+        String header = req.getHeader("Authorization");
+        String path = req.getServletPath();
 
-        if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
+        if (path.startsWith("/api/auth/login") ||
+                path.startsWith("/api/auth/register") ||
+                path.startsWith("/api/auth/forgot-password") ||
+                path.startsWith("/api/auth/reset-password")) {
+
             chain.doFilter(req, res);
             return;
         }
+        if (header != null && header.startsWith("Bearer ")) {
 
-        if (header!=null && header.startsWith("Bearer ")){
-            String token =header.substring((7));
+            String token = header.substring(7);
 
-            try{
-                String email=jwtUtil.extractEmail(token);
-                Optional<User> user=userRepository.findByEmail(email);
+            try {
+                if (!jwtUtil.validateToken(token)) {
+                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    res.getWriter().write("Session expired. Please login again");
+                    return;
+                }
+                String email = jwtUtil.extractEmail(token);
+                Optional<User> userOpt = userRepository.findByEmail(email);
 
-                if (user.isPresent()){
-                    User u=user.get();
-                    UsernamePasswordAuthenticationToken auth=new UsernamePasswordAuthenticationToken(u,null, List.of(new SimpleGrantedAuthority("ROLE_"+u.getRole().name())));
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+
+                    // 🔥 Secure validation (user match)
+                    if (!jwtUtil.validateToken(token, user)) {
+                        res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        res.getWriter().write("Invalid token");
+                        return;
+                    }
+
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                            );
+
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
-
-
-            }catch (Exception e){
-                System.out.println("Token not found");
-                e.printStackTrace();
+            } catch (Exception e) {
+                res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                res.getWriter().write("Session expired or invalid token");
+                return;
             }
+        } else {
+            res.setStatus(HttpStatus.UNAUTHORIZED.value());
+            res.getWriter().write("Authorization token missing");
+            return;
         }
-        chain.doFilter(req,res);
+
+        chain.doFilter(req, res);
     }
 }
