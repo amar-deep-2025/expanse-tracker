@@ -1,9 +1,7 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
-import com.amar.fullstack.expanse_tracker_backend.Mapping.UserMapper;
-import com.amar.fullstack.expanse_tracker_backend.dtos.EmailChangeRequest;
-import com.amar.fullstack.expanse_tracker_backend.dtos.PasswordChangeRequestDto;
-import com.amar.fullstack.expanse_tracker_backend.dtos.UpdateProfileRequest;
-import com.amar.fullstack.expanse_tracker_backend.dtos.UserResponseDto;
+import com.amar.fullstack.expanse_tracker_backend.exception.UnAuthorizedException;
+import com.amar.fullstack.expanse_tracker_backend.mapping.UserMapper;
+import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.Role;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
@@ -188,4 +186,14 @@ public class UserService {
         userRepo.save(user);
     }
 
+
+    public void deleteCurrentUser(User user) {
+        logger.info("Deleting current user: {}", user.getId());
+        User currUser = userRepo.findById(user.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
+        userRepo.delete(currUser);
+        logger.info("User deleted successfully: {}", user.getId());
+    }
 }
