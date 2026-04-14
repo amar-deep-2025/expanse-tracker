@@ -14,7 +14,6 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // Must be at least 32 characters
     @Value("${jwt.secret:testsecretkey1234567890testsecretkey1234567890}")
     private String SECRET;
 
@@ -25,39 +24,56 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    // 🔥 Generate Token
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
-                .claim("role", user.getRole().name()) // FIXED
+                .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))// 30 minutes
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+    public String generateResetToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("type", "RESET")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 🔍 Extract Email
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }
 
-    // 🔍 Extract Role
     public String extractRole(String token) {
         return (String) extractClaims(token).get("role");
     }
 
-    // 🔍 Validate Token
+    public Date extractExpiration(String token) {
+        return extractClaims(token).getExpiration();
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
     public boolean validateToken(String token) {
         try {
-            extractClaims(token);
-            return true;
+            return !isTokenExpired(token);
         } catch (Exception e) {
-            System.out.println("Invalid JWT: " + e.getMessage());
             return false;
         }
     }
-
-    // 🔍 Extract Claims
+    public boolean validateToken(String token, User user) {
+        try {
+            final String username = extractEmail(token);
+            return (username.equals(user.getEmail()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false;
+        }
+    }
     private Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
