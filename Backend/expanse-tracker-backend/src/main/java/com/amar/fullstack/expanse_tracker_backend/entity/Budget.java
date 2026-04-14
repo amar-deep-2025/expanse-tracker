@@ -46,7 +46,7 @@ public class Budget {
     private BudgetType type;
 
     @ManyToOne
-    @JoinColumn(name = "category_id",nullable = false)
+    @JoinColumn(name = "category_id",nullable = true)
     private ExpanseCategory category;
 
     @ManyToOne
