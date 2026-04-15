@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Positive;
 
 public class ExpanseRequestDto {
 
+
+
     @NotBlank(message = "Name is required")
     private String name;
 
@@ -14,13 +16,19 @@ public class ExpanseRequestDto {
     @Positive(message = "Amount must be positive")
     private Double amount;
 
-    @NotBlank(message = "Category is required")
-    private String category;
 
+    private Long categoryId;
+
+    private String categoryName;
+
+    // 🔥 CHANGE THIS
     private String description;
 
     @NotBlank(message = "Type is required")
     private String type;
+
+    // getters & setters
+
 
     public String getName() {
         return name;
@@ -38,12 +46,20 @@ public class ExpanseRequestDto {
         this.amount = amount;
     }
 
-    public String getCategory() {
-        return category;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public String getDescription() {
