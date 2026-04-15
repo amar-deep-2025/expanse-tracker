@@ -1,43 +1,84 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
-
 import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
+import com.amar.fullstack.expanse_tracker_backend.repository.BudgetRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(DashboardService.class);
-
     private final ExpanseRepository expRepo;
+    private final BudgetRepository budgetRepo;
 
-    public DashboardService(ExpanseRepository expRepo) {
+    public DashboardService(ExpanseRepository expRepo, BudgetRepository budgetRepo) {
         this.expRepo = expRepo;
+        this.budgetRepo = budgetRepo;
     }
 
-    public DashboardSummaryDto getSummary(User user) {
+    // 🔥 DEFAULT DASHBOARD
+    public DashboardResponse getSummary(User user) {
 
         Long userId = user.getId();
 
-        Double expense = defaultZero(expRepo.getTotalExpense(userId));
-        Double income = defaultZero(expRepo.getTotalIncome(userId));
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
 
-        return new DashboardSummaryDto(expense, income, income - expense);
+        Double income = defaultZero(expRepo.getTotalIncome(userId));
+        Double expense = defaultZero(expRepo.getTotalExpense(userId));
+        Double budget = defaultZero(budgetRepo.getTotalBudget(userId)); // ✅ FIX
+
+        Double monthlyExpense = defaultZero(
+                expRepo.getExpenseByMonth(userId, now.getMonthValue(), now.getYear())
+        );
+
+        Double todayExpense = defaultZero(
+                expRepo.getExpenseBetweenDates(
+                        userId,
+                        today.atStartOfDay(),
+                        today.atTime(23, 59, 59)
+                )
+        );
+
+        Map<String, Double> categoryMap = expRepo.getTopCategory(userId)
+                .stream()
+                .collect(Collectors.toMap(
+                        obj -> (String) obj[0],
+                        obj -> ((Number) obj[1]).doubleValue()
+                ));
+
+        List<RecentExpanseDto> recentList = getRecentExpenses(user);
+
+        return new DashboardResponse(
+                income,
+                budget,                     // ✅ correct order
+                income - expense,
+                budget - expense,
+                expense,
+                monthlyExpense,
+                todayExpense,
+                categoryMap,
+                recentList
+        );
     }
 
-    public DashboardSummaryDto getSummaryByDate(
+    // 🔥 DATE FILTER DASHBOARD
+    public DashboardResponse getSummaryByDate(
             User user,
             LocalDateTime start,
             LocalDateTime end) {
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Start date must be before end date");
+        }
 
         Long userId = user.getId();
 
@@ -47,46 +88,69 @@ public class DashboardService {
         Double expense = defaultZero(
                 expRepo.getExpenseBetweenDates(userId, start, end));
 
-        return new DashboardSummaryDto(expense, income, income - expense);
+        Double budget = defaultZero(
+                budgetRepo.getBudgetBetweenMonths(
+                        userId,
+                        start.getMonthValue(),
+                        start.getYear(),
+                        end.getMonthValue(),
+                        end.getYear()
+                )
+        );
+
+        Map<String, Double> categoryMap =
+                expRepo.getCategorySummary(userId, start, end)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                obj -> (String) obj[0],
+                                obj -> ((Number) obj[1]).doubleValue()
+                        ));
+
+        List<RecentExpanseDto> recentList = getRecentExpenses(user);
+
+        return new DashboardResponse(
+                income,
+                budget,
+                income - expense,
+                budget - expense,
+                expense,
+                expense,     // monthlyExpense approx (date filter case)
+                0.0,
+                categoryMap,
+                recentList
+        );
     }
 
-    public List<CategoryDto> getCategorySummary(
-            User user,
-            LocalDateTime start,
-            LocalDateTime end) {
-
-        Long userId = user.getId();
-
-        return expRepo.getCategorySummary(userId, start, end)
+    // 🔹 RECENT EXPENSES
+    public List<RecentExpanseDto> getRecentExpenses(User user) {
+        return expRepo.findTop5ByUser_IdOrderByExpanseDateDesc(user.getId())
                 .stream()
-                .map(this::mapToCategoryDto)
+                .map(this::mapToRecentDto)
                 .toList();
     }
 
+    // 🔹 MONTHLY CHART
     public List<MonthlyDto> getMonthly(User user, int year) {
-
-        Long userId = user.getId();
-
-        return expRepo.getMonthlyIncomeExpense(userId, year)
+        return expRepo.getMonthlyIncomeExpense(user.getId(), year)
                 .stream()
                 .map(this::mapToMonthlyDto)
                 .toList();
     }
 
-    public List<RecentExpanseDto> getRecentExpenses(User user) {
+    // 🔹 CATEGORY SUMMARY
+    public List<CategoryDto> getCategorySummary(
+            User user,
+            LocalDateTime start,
+            LocalDateTime end) {
 
-        return expRepo.findTop5ByUser_IdOrderByExpanseDateDesc(user.getId())
+        return expRepo.getCategorySummary(user.getId(), start, end)
                 .stream()
-                .map(e -> new RecentExpanseDto(
-                        e.getId(),
-                        e.getName(),
-                        e.getAmount(),
-                        e.getCategory().getName(),
-                        e.getType().name()
-                ))
+                .map(this::mapToCategoryDto)
                 .toList();
     }
-    public ComparisonDto compareCurrentMonth(Long userId){
+
+    // 🔹 MONTH COMPARISON (RESTORED ✅)
+    public ComparisonDto compareCurrentMonth(Long userId) {
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -112,21 +176,24 @@ public class DashboardService {
         percent = Math.round(percent * 100.0) / 100.0;
 
         String status = diff > 0 ? "Increased"
-                : diff < 0 ? "Decreased" : "No Change";
+                : diff < 0 ? "Decreased"
+                : "No Change";
 
         return new ComparisonDto(
-                current, last,
+                current,
+                last,
                 Math.abs(diff),
                 Math.abs(percent),
                 status
         );
     }
 
-    public CategoryDto getTopCategory(Long userId){
+    // 🔹 TOP CATEGORY (RESTORED ✅)
+    public CategoryDto getTopCategory(Long userId) {
 
         List<Object[]> data = expRepo.getTopCategory(userId);
 
-        if (data.isEmpty()){
+        if (data == null || data.isEmpty()) {
             return new CategoryDto("No Data", 0.0);
         }
 
@@ -138,15 +205,19 @@ public class DashboardService {
         );
     }
 
+    // 🔹 COMMON METHODS
 
     private Double defaultZero(Double value) {
-        return value == null ? 0.0 : value;
+        return value == null ? 0.0 : value; // ✅ FIXED
     }
 
-    private CategoryDto mapToCategoryDto(Object[] obj) {
-        return new CategoryDto(
-                (String) obj[0],
-                obj[1] != null ? ((Number) obj[1]).doubleValue() : 0.0
+    private RecentExpanseDto mapToRecentDto(Expanse e) {
+        return new RecentExpanseDto(
+                e.getId(),
+                e.getName(),
+                e.getAmount(),
+                e.getCategory() != null ? e.getCategory().getName() : null,
+                e.getType().name()
         );
     }
 
@@ -155,6 +226,13 @@ public class DashboardService {
                 (Integer) obj[0],
                 obj[1] != null ? ((Number) obj[1]).doubleValue() : 0.0,
                 obj[2] != null ? ((Number) obj[2]).doubleValue() : 0.0
+        );
+    }
+
+    private CategoryDto mapToCategoryDto(Object[] obj) {
+        return new CategoryDto(
+                (String) obj[0],
+                obj[1] != null ? ((Number) obj[1]).doubleValue() : 0.0
         );
     }
 }

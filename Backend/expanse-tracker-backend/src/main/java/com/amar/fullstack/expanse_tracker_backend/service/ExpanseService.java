@@ -31,12 +31,31 @@ public class ExpanseService {
 
     public ExpanseResponseDto createExpanse(ExpanseRequestDto dto, User user) {
 
-        ExpanseCategory category = getOrCreateCategory(dto.getCategory(), user);
+        ExpanseCategory category;
+        if (dto.getCategoryId() != null) {
+            category = getCategoryById(dto.getCategoryId(), user);
 
+        } else if (dto.getCategoryName() != null && !dto.getCategoryName().isBlank()) {
+
+            category = categoryRepo
+                    .findByNameIgnoreCaseAndUser_Id(dto.getCategoryName(), user.getId())
+                    .orElseGet(() -> {
+                        ExpanseCategory newCat = new ExpanseCategory();
+                        newCat.setName(dto.getCategoryName().trim());
+                        newCat.setUser(user);
+                        return categoryRepo.save(newCat);
+                    });
+
+        } else {
+            throw new IllegalArgumentException("Category is required");
+        }
+
+        // ✅ update total
         category.setTotalAmount(
                 safe(category.getTotalAmount()) + dto.getAmount()
         );
 
+        // ✅ create expense
         Expanse expanse = new Expanse();
         expanse.setName(dto.getName());
         expanse.setType(Type.valueOf(dto.getType()));
@@ -56,7 +75,6 @@ public class ExpanseService {
                 .toList();
     }
 
-
     public ExpanseResponseDto getById(Long id, User user) {
 
         Expanse expanse = findExpenseById(id);
@@ -66,25 +84,41 @@ public class ExpanseService {
     }
 
 
-    @Transactional
-    public ExpanseResponseDto updateExpanse(Long id,
-                                            ExpanseRequestDto dto,
-                                            User user) {
+    private ExpanseCategory resolveCategory(ExpanseRequestDto dto, User user) {
+        if (dto.getCategoryId() != null) {
+            return getCategoryById(dto.getCategoryId(), user);
+
+        } else if (dto.getCategoryName() != null && !dto.getCategoryName().isBlank()) {
+
+            return categoryRepo
+                    .findByNameIgnoreCaseAndUser_Id(dto.getCategoryName(), user.getId())
+                    .orElseGet(() -> {
+                        ExpanseCategory newCat = new ExpanseCategory();
+                        newCat.setName(dto.getCategoryName().trim());
+                        newCat.setUser(user);
+                        return categoryRepo.save(newCat);
+                    });
+        }
+
+        throw new IllegalArgumentException("Category is required");
+    }
+
+    public ExpanseResponseDto updateExpanse(
+            Long id,
+            ExpanseRequestDto dto,
+            User user) {
 
         Expanse expanse = findExpenseById(id);
         validateOwner(expanse, user);
 
         ExpanseCategory oldCategory = expanse.getCategory();
-        ExpanseCategory newCategory = getOrCreateCategory(dto.getCategory(), user);
-
+        ExpanseCategory newCategory = resolveCategory(dto, user);
         if (!oldCategory.getId().equals(newCategory.getId())) {
 
-            // subtract from old
             oldCategory.setTotalAmount(
                     safe(oldCategory.getTotalAmount()) - expanse.getAmount()
             );
 
-            // add to new
             newCategory.setTotalAmount(
                     safe(newCategory.getTotalAmount()) + dto.getAmount()
             );
@@ -100,11 +134,11 @@ public class ExpanseService {
         expanse.setName(dto.getName());
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
+        expanse.setType(Type.valueOf(dto.getType()));
         expanse.setCategory(newCategory);
 
         return mapToResponse(expRepo.save(expanse));
     }
-
 
     @Transactional
     public void deleteExpanse(Long id, User user) {
@@ -114,25 +148,19 @@ public class ExpanseService {
 
         ExpanseCategory category = expanse.getCategory();
 
-        category.setTotalAmount(
-                safe(category.getTotalAmount()) - expanse.getAmount()
-        );
-
+        if (category != null) {
+            category.setTotalAmount(
+                    safe(category.getTotalAmount()) - expanse.getAmount()
+            );
+        }
         expRepo.delete(expanse);
     }
+    private ExpanseCategory getCategoryById(Long categoryId, User user) {
 
-    private ExpanseCategory getOrCreateCategory(String name, User user) {
-
-        return categoryRepo
-                .findByNameIgnoreCaseAndUser_Id(name, user.getId()) // ✅ FIXED
-                .orElseGet(() -> {
-
-                    ExpanseCategory category = new ExpanseCategory();
-                    category.setName(name);
-                    category.setUser(user); // 🔥 MUST
-
-                    return categoryRepo.save(category);
-                });
+        return categoryRepo.findById(categoryId)
+                .filter(cat -> cat.getUser().getId().equals(user.getId()))
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Category not found"));
     }
 
     private Expanse findExpenseById(Long id) {
