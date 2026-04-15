@@ -1,7 +1,6 @@
 package com.amar.fullstack.expanse_tracker_backend.controller;
 
 import com.amar.fullstack.expanse_tracker_backend.dtos.*;
-import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.service.DashboardService;
 import jakarta.validation.constraints.Max;
@@ -29,22 +28,22 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
+    // 🔥 DEFAULT DASHBOARD (PAGE LOAD)
     @GetMapping("/summary")
-    public ResponseEntity<DashboardSummaryDto> getSummary(
-            Authentication auth) {
+    public ResponseEntity<DashboardResponse> getSummary(Authentication auth) {
 
         User user = getCurrentUser(auth);
 
-        logger.info("Dashboard summary requested for userId={}",
-                user.getId());
+        logger.info("Dashboard summary requested for userId={}", user.getId());
 
         return ResponseEntity.ok(
                 dashboardService.getSummary(user)
         );
     }
 
-    @GetMapping("/summary/date")
-    public ResponseEntity<DashboardSummaryDto> getSummaryByDate(
+    // 🔥 DATE FILTER DASHBOARD
+    @GetMapping("/summary-by-date")
+    public ResponseEntity<DashboardResponse> getSummaryByDate(
             Authentication auth,
 
             @RequestParam
@@ -55,6 +54,10 @@ public class DashboardController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime end) {
 
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Start date must be before end date");
+        }
+
         User user = getCurrentUser(auth);
 
         logger.info(
@@ -63,14 +66,12 @@ public class DashboardController {
         );
 
         return ResponseEntity.ok(
-                dashboardService.getSummaryByDate(
-                        user, start, end
-                )
+                dashboardService.getSummaryByDate(user, start, end)
         );
     }
 
-    @GetMapping("/category")
-    public ResponseEntity<List<CategoryDto>> getCategory(
+    @GetMapping("/category-summary")
+    public ResponseEntity<List<CategoryDto>> getCategorySummary(
             Authentication auth,
 
             @RequestParam
@@ -89,11 +90,11 @@ public class DashboardController {
         );
 
         return ResponseEntity.ok(
-                dashboardService.getCategorySummary(
-                        user, start, end
-                )
+                dashboardService.getCategorySummary(user, start, end)
         );
     }
+
+    // 🔹 MONTHLY DATA (FOR CHARTS)
     @GetMapping("/monthly")
     public ResponseEntity<List<MonthlyDto>> getMonthly(
             Authentication auth,
@@ -115,48 +116,46 @@ public class DashboardController {
         );
     }
 
+    // 🔹 RECENT EXPENSES
     @GetMapping("/recent")
-    public List<RecentExpanseDto> getRecent(Authentication auth) {
-        System.out.println("hello");
-        User user=getCurrentUser(auth);
-        logger.info("Entered in Recent expenses userId={}", user.getId());
-        return dashboardService.getRecentExpenses(user);
-    }
-
-    @GetMapping("/compare-month")
-    public ResponseEntity<ComparisonDto> compareMonth(
-            Authentication auth) {
+    public ResponseEntity<List<RecentExpanseDto>> getRecent(Authentication auth) {
 
         User user = getCurrentUser(auth);
 
-        logger.info(
-                "Month comparison requested for userId={}",
-                user.getId()
-        );
+        logger.info("Recent expenses requested for userId={}", user.getId());
 
         return ResponseEntity.ok(
-                dashboardService.compareCurrentMonth(
-                        user.getId()
-                )
+                dashboardService.getRecentExpenses(user)
         );
     }
 
+    // 🔹 MONTH COMPARISON
+    @GetMapping("/compare")
+    public ResponseEntity<ComparisonDto> compareMonth(Authentication auth) {
+
+        User user = getCurrentUser(auth);
+
+        logger.info("Month comparison requested for userId={}", user.getId());
+
+        return ResponseEntity.ok(
+                dashboardService.compareCurrentMonth(user.getId())
+        );
+    }
+
+    // 🔹 TOP CATEGORY
     @GetMapping("/top-category")
-    public ResponseEntity<CategoryDto> getTopCategory(
-            Authentication auth) {
+    public ResponseEntity<CategoryDto> getTopCategory(Authentication auth) {
 
         User user = getCurrentUser(auth);
 
-        logger.info(
-                "Top category requested for userId={}",
-                user.getId()
-        );
+        logger.info("Top category requested for userId={}", user.getId());
+
         return ResponseEntity.ok(
-                dashboardService.getTopCategory(
-                        user.getId()
-                )
+                dashboardService.getTopCategory(user.getId())
         );
     }
+
+    // 🔐 GET LOGGED-IN USER
     private User getCurrentUser(Authentication auth) {
         return (User) auth.getPrincipal();
     }
