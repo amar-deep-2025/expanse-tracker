@@ -27,8 +27,16 @@ public class AuthController {
         logger.info("Register API called");
         logger.debug("Register request received for email: {}", request.getEmail());
         authService.register(request);
-        logger.info("User registered successfully");
-        return ResponseEntity.ok("User registered successfully");
+        logger.info("Ready to Otp sent");
+        return ResponseEntity.ok("Otp sent Successfully");
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<String> verifyOtp(@Valid @RequestBody VerifyOtpRequest request){
+        logger.info("Entered in verifyOtp");
+        authService.verifyOtp(request);
+        logger.info("Registration process");
+        return ResponseEntity.ok("User Registered successfully");
     }
 
     @PostMapping("/login")
