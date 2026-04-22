@@ -12,6 +12,7 @@ public class BudgetResponseDto {
     private Integer year;
     private BudgetType type;
     private String categoryName;
+    private String warning;
 
     public BudgetResponseDto(Long id,
                              String name,
@@ -19,7 +20,8 @@ public class BudgetResponseDto {
                              Integer month,
                              Integer year,
                              BudgetType type,
-                             String categoryName) {
+                             String categoryName,
+                             String warning) {
         this.id = id;
         this.name = name;
         this.budget = budget;
@@ -27,6 +29,7 @@ public class BudgetResponseDto {
         this.year = year;
         this.type = type;
         this.categoryName = categoryName;
+        this.warning= warning;
     }
 
     public Long getId() {
@@ -55,6 +58,14 @@ public class BudgetResponseDto {
 
     public String getCategoryName() {
         return categoryName;
+    }
+
+    public String isWarning() {
+        return warning;
+    }
+
+    public void setWarning(String warning) {
+        this.warning = warning;
     }
 }
 
