@@ -1,9 +1,11 @@
 package com.amar.fullstack.expanse_tracker_backend.repository;
 
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
+import com.amar.fullstack.expanse_tracker_backend.entity.Type;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,19 +16,30 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
 
         List<Expanse> findByUser_Id(Long userId);
 
-        @Query("SELECT SUM(e.amount) FROM Expanse e WHERE e.user.id = :userId AND e.type = 'EXPENSE'")
+        @Query("""
+    SELECT COALESCE(SUM(e.amount), 0)
+    FROM Expanse e
+    WHERE e.user.id = :userId
+    AND e.type = 'EXPENSE'
+""")
         Double getTotalExpense(Long userId);
 
-        @Query("SELECT SUM(e.amount) FROM Expanse e WHERE e.user.id = :userId AND e.type = 'INCOME'")
+        @Query("""
+    SELECT COALESCE(SUM(e.amount), 0)
+    FROM Expanse e
+    WHERE e.user.id = :userId
+    AND e.type = 'INCOME'
+""")
         Double getTotalIncome(Long userId);
 
         @Query("SELECT SUM(e.amount) FROM Expanse e WHERE e.user.id = :userId AND e.type = 'EXPENSE' AND e.expanseDate BETWEEN :startDate AND :endDate")
-        Double getExpenseBetweenDates(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+        Double getExpenseBetweenDates(Long userId,
+                                      LocalDateTime startDate, LocalDateTime endDate);
 
         @Query("SELECT e.category.name, SUM(e.amount) FROM Expanse e WHERE e.user.id = :userId AND e.type = 'EXPENSE' AND e.expanseDate BETWEEN :startDate AND :endDate GROUP BY e.category.name")
-        List<Object[]> getCategorySummary(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+        List<Object[]> getCategorySummary( Long userId,  LocalDateTime startDate,  LocalDateTime endDate);
 
-        List<Expanse> findTop5ByUser_IdOrderByExpanseDateDesc(Long userId);
+        List<Expanse> findTop5ByUser_IdOrderByExpanseDateDesc( Long userId);
 
         @Query("SELECT SUM(e.amount) FROM Expanse e WHERE e.user.id = :userId AND e.type = 'INCOME' AND e.expanseDate BETWEEN :startDate AND :endDate")
         Double getIncomeBetweenDates(Long userId, LocalDateTime startDate, LocalDateTime endDate);
@@ -42,7 +55,7 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
                         GROUP BY MONTH(e.expanseDate)
                         ORDER BY MONTH(e.expanseDate)
                         """)
-        List<Object[]> getMonthlyIncomeExpense(Long userId, int year);
+        List<Object[]> getMonthlyIncomeExpense( Long userId,@Param("year") int year);
 
         @Query("""
                         SELECT SUM(e.amount) FROM Expanse e
@@ -51,7 +64,7 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
                         AND MONTH(e.expanseDate)=:month
                         AND YEAR(e.expanseDate)=:year
                         """)
-        Double getExpenseByMonth(Long userId, int month, int year);
+        Double getExpenseByMonth(@Param("userId") Long userId, @Param("month") int month, @Param("year") int year);
 
         @Query("""
                         SELECT c.name, SUM(e.amount) FROM Expanse e
@@ -61,5 +74,9 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
                         GROUP BY c.name
                         ORDER BY SUM(e.amount) DESC
                         """)
-        List<Object[]> getTopCategory(Long userId);
+        List<Object[]> getTopCategory(@Param("userId") Long userId);
+
+        @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expanse e WHERE e.user.id = :userId AND e.type = :type")
+        double getTotalByType(@Param("userId") Long userId,
+                              @Param("type") Type type);
 }

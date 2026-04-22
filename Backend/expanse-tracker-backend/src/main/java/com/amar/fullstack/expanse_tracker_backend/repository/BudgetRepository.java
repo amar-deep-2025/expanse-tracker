@@ -4,6 +4,7 @@ import com.amar.fullstack.expanse_tracker_backend.entity.Budget;
 import com.amar.fullstack.expanse_tracker_backend.entity.BudgetType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -12,6 +13,9 @@ import java.util.Optional;
 
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget,Long> {
+
+
+    Optional<Budget> findByUserId(Long userId);
 
     List<Budget> findByUserIdOrderByYearDescMonthDesc(Long userId);
 
@@ -60,6 +64,13 @@ public interface BudgetRepository extends JpaRepository<Budget,Long> {
             Integer endYear
     );
 
+    @Query("SELECT SUM(b.budget) FROM Budget b WHERE b.user.id = :userId")
+    Double getAllBudgets(Long userId);
 
-
+    boolean existsByUserIdAndMonthAndYearAndType(
+            Long userId,
+            int month,
+            int year,
+            BudgetType type
+    );
 }
