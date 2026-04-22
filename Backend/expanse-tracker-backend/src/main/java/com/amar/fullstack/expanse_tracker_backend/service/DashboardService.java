@@ -1,6 +1,7 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
 import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
+import com.amar.fullstack.expanse_tracker_backend.entity.Type;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.repository.BudgetRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
@@ -129,6 +130,14 @@ public class DashboardService {
                 .toList();
     }
 
+    public List<RecentExpanseDto> getRecentExpensesByUserId(Long userId) {
+        return expRepo.findTop5ByUser_IdOrderByExpanseDateDesc(userId)
+                .stream()
+                .map(this::mapToRecentDto)
+                .toList();
+    }
+
+
     // 🔹 MONTHLY CHART
     public List<MonthlyDto> getMonthly(User user, int year) {
         return expRepo.getMonthlyIncomeExpense(user.getId(), year)
@@ -137,13 +146,31 @@ public class DashboardService {
                 .toList();
     }
 
-    // 🔹 CATEGORY SUMMARY
+    public List<MonthlyDto> getMonthly_ByUserId(Long userId, int year) {
+        return expRepo.getMonthlyIncomeExpense(userId, year)
+                .stream()
+                .map(this::mapToMonthlyDto)
+                .toList();
+
+    }
+
     public List<CategoryDto> getCategorySummary(
             User user,
             LocalDateTime start,
             LocalDateTime end) {
 
         return expRepo.getCategorySummary(user.getId(), start, end)
+                .stream()
+                .map(this::mapToCategoryDto)
+                .toList();
+    }
+
+    public List<CategoryDto> getCategorySummary(
+            Long userId,
+            LocalDateTime start,
+            LocalDateTime end) {
+
+        return expRepo.getCategorySummary(userId, start, end)
                 .stream()
                 .map(this::mapToCategoryDto)
                 .toList();
@@ -205,6 +232,19 @@ public class DashboardService {
         );
     }
 
+    public double getTotalAmountByType(User user, Type type) {
+        return expRepo.getTotalByType(user.getId(), type);
+    }
+
+    public double getTotalIncome(Long userId){
+        return expRepo.getTotalIncome(userId);
+    }
+
+    public double getTotalExpense(Long userId){
+        return expRepo.getTotalExpense(userId);
+    }
+
+
     // 🔹 COMMON METHODS
 
     private Double defaultZero(Double value) {
@@ -234,5 +274,29 @@ public class DashboardService {
                 (String) obj[0],
                 obj[1] != null ? ((Number) obj[1]).doubleValue() : 0.0
         );
+    }
+
+    public List<BudgetResponseDto> getAllBudgets(Long userId){
+        return budgetRepo.findByUserId(userId)
+                .stream()
+                .map(budget -> new BudgetResponseDto(
+                        budget.getId(),
+                        budget.getName(),
+                        budget.getBudget(),
+                        budget.getMonth(),
+                        budget.getYear(),
+                        budget.getType(),
+                        budget.getCategory().getName(),
+                        null
+                ))
+                .toList();
+    }
+
+    public DashboardResponse getSummaryByUserId(Long userId) {
+
+        User user = new User();
+        user.setId(userId);
+
+        return getSummary(user);
     }
 }
