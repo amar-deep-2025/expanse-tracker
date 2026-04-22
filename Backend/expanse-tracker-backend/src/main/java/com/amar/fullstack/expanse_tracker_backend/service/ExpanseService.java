@@ -2,9 +2,11 @@ package com.amar.fullstack.expanse_tracker_backend.service;
 
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseRequestDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
+import com.amar.fullstack.expanse_tracker_backend.dtos.NotificationRequest;
 import com.amar.fullstack.expanse_tracker_backend.entity.*;
 import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
 import com.amar.fullstack.expanse_tracker_backend.exception.UnAuthorizedException;
+import com.amar.fullstack.expanse_tracker_backend.notification.service.NotificationService;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseCategoryRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
 import jakarta.transaction.Transactional;
@@ -22,26 +24,34 @@ public class ExpanseService {
 
     private final ExpanseRepository expRepo;
     private final ExpanseCategoryRepository categoryRepo;
+    private final NotificationService notificationService;
 
     public ExpanseService(ExpanseRepository expRepo,
-                          ExpanseCategoryRepository categoryRepo) {
+                          ExpanseCategoryRepository categoryRepo,
+                          NotificationService notificationService) {
         this.expRepo = expRepo;
         this.categoryRepo = categoryRepo;
+        this.notificationService=notificationService;
     }
 
     public ExpanseResponseDto createExpanse(ExpanseRequestDto dto, User user) {
 
         ExpanseCategory category;
+
         if (dto.getCategoryId() != null) {
+
             category = getCategoryById(dto.getCategoryId(), user);
 
         } else if (dto.getCategoryName() != null && !dto.getCategoryName().isBlank()) {
 
+            // ✅ normalize input (VERY IMPORTANT)
+            String categoryName = dto.getCategoryName().trim().toLowerCase();
+
             category = categoryRepo
-                    .findByNameIgnoreCaseAndUser_Id(dto.getCategoryName(), user.getId())
+                    .findByNameIgnoreCaseAndUser_Id(categoryName, user.getId())
                     .orElseGet(() -> {
                         ExpanseCategory newCat = new ExpanseCategory();
-                        newCat.setName(dto.getCategoryName().trim());
+                        newCat.setName(categoryName); // ✅ normalized save
                         newCat.setUser(user);
                         return categoryRepo.save(newCat);
                     });
@@ -50,21 +60,37 @@ public class ExpanseService {
             throw new IllegalArgumentException("Category is required");
         }
 
-        // ✅ update total
-        category.setTotalAmount(
-                safe(category.getTotalAmount()) + dto.getAmount()
-        );
+        // ✅ resolve type once
+        Type type = Type.valueOf(dto.getType());
+
+        // ✅ ONLY expense affects totalAmount
+        if (type == Type.EXPENSE) {
+            category.setTotalAmount(
+                    safe(category.getTotalAmount()) + dto.getAmount()
+            );
+        }else if(type==Type.INCOME){
+            category.setTotalAmount(
+                    safe(category.getTotalAmount()) + dto.getAmount()
+            );
+        }
 
         // ✅ create expense
         Expanse expanse = new Expanse();
         expanse.setName(dto.getName());
-        expanse.setType(Type.valueOf(dto.getType()));
+        expanse.setType(type);
         expanse.setAmount(dto.getAmount());
         expanse.setDescription(dto.getDescription());
         expanse.setCategory(category);
         expanse.setUser(user);
 
-        return mapToResponse(expRepo.save(expanse));
+        Expanse saved=expRepo.save(expanse);
+        if (type==Type.EXPENSE){
+            sendExpenseNotification(saved,user);
+        }else if(type==Type.INCOME){
+            sendIncomeNotification(saved,user);
+        }
+
+        return mapToResponse(saved);
     }
 
     public List<ExpanseResponseDto> getUserExpenses(User user) {
@@ -194,4 +220,105 @@ public class ExpanseService {
 
         return dto;
     }
+
+    private void sendExpenseNotification(Expanse expanse, User user) {
+
+        double totalExpense = expRepo.getTotalExpense(user.getId()) != null
+                ? expRepo.getTotalExpense(user.getId())
+                : 0.0;
+
+        double totalIncome = expRepo.getTotalIncome(user.getId()) != null
+                ? expRepo.getTotalIncome(user.getId())
+                : 0.0;
+
+        double remainingBalance = totalIncome - totalExpense;
+
+        if (expanse.getAmount() > 2000) {
+
+            NotificationRequest notify = new NotificationRequest();
+
+            notify.setEmail(user.getEmail());
+            notify.setPhone(user.getPhone());
+
+            notify.setSubject("High Expense Alert 🚨");
+
+            notify.setMessage(
+                    "Hello " + user.getName() + ",\n\n" +
+                            "⚠ High Expense Alert!\n\n" +
+                            "Amount: ₹" + expanse.getAmount() + "\n" +
+                            "Category: " + expanse.getCategory().getName() + "\n\n" +
+
+                            "Total Expense: ₹" + totalExpense + "\n" +
+                            "Total Income: ₹" + totalIncome + "\n" +
+                            "Remaining Balance: ₹" + remainingBalance + "\n\n" +
+
+                            "Please review your spending.\n\n" +
+                            "----------------------------------\n" +
+                            "This is a system-generated message."
+            );
+
+            notify.setSmsMessage(
+                    "High expense: ₹" + expanse.getAmount()
+            );
+
+            notify.setTypes(List.of(
+                    NotificationType.EMAIL,
+                    NotificationType.SMS
+            ));
+
+            notificationService.send(notify);
+
+        } else {
+
+            NotificationRequest notify = new NotificationRequest();
+
+            notify.setEmail(user.getEmail());
+
+            notify.setSubject("Expense Added");
+
+            notify.setMessage(
+                    "Hello " + user.getName() + ",\n\n" +
+                            "A new expense has been added.\n\n" +
+                            "Amount: ₹" + expanse.getAmount() + "\n" +
+                            "Category: " + expanse.getCategory().getName() + "\n\n" +
+
+                            "Total Expense: ₹" + totalExpense + "\n" +
+                            "Remaining Balance: ₹" + remainingBalance + "\n\n" +
+
+                            "----------------------------------\n" +
+                            "This is a system-generated message."
+            );
+
+            notify.setTypes(List.of(NotificationType.EMAIL));
+
+            notificationService.send(notify);
+        }
+    }
+    private void sendIncomeNotification(Expanse expanse, User user) {
+
+        NotificationRequest notify = new NotificationRequest();
+
+        notify.setEmail(user.getEmail());
+
+
+        notify.setSubject("Income Added");
+        double totalIncome=expRepo.getTotalIncome(user.getId());
+        notify.setMessage(
+                "Hello " + user.getName() + ",\n\n" +
+                        "New income has been added successfully.\n\n" +
+                        "Amount: ₹" + expanse.getAmount() + "\n" +
+                        "Category: " + expanse.getCategory().getName() + "\n\n" +
+                        "Total in this category: ₹" + expanse.getCategory().getTotalAmount() + "\n" +
+                        "Total Income: ₹" + totalIncome + "\n\n" +
+
+                        "----------------------------------\n" +
+                        "This is a system-generated message."
+        );
+
+        notify.setTypes(List.of(NotificationType.EMAIL));
+
+        notificationService.send(notify);
+    }
+
+
 }
