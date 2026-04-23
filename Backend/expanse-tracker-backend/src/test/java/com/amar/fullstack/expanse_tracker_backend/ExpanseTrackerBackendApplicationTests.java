@@ -7,6 +7,7 @@ import com.amar.fullstack.expanse_tracker_backend.service.DashboardService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -28,6 +29,10 @@ class ExpanseTrackerBackendApplicationTests {
 
 	@MockBean
 	private DashboardService dashboardService;
+
+
+	@MockBean
+	private StringRedisTemplate stringRedisTemplate;
 
 	@Test
 	void contextLoads() {
