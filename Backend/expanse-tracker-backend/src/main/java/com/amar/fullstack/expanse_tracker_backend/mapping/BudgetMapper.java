@@ -19,7 +19,8 @@ public class BudgetMapper {
                 budget.getType(),
                 budget.getCategory() != null
                         ? budget.getCategory().getName()
-                        : null
+                        : null,
+                null
         );
     }
 
