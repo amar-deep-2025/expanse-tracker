@@ -1,20 +1,35 @@
 package com.amar.fullstack.expanse_tracker_backend;
 
+import com.amar.fullstack.expanse_tracker_backend.notification.strategy.EmailNotificationStrategy;
+import com.amar.fullstack.expanse_tracker_backend.notification.strategy.SmsNotificationStrategy;
+import com.amar.fullstack.expanse_tracker_backend.service.BudgetService;
+import com.amar.fullstack.expanse_tracker_backend.service.DashboardService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.beans.Encoder;
-
 
 @SpringBootTest
 @ActiveProfiles("test")
 class ExpanseTrackerBackendApplicationTests {
 
+	@MockBean
+	private EmailNotificationStrategy emailNotificationStrategy;
+
+	@MockBean
+	private SmsNotificationStrategy smsNotificationStrategy;
+
+	@MockBean
+	private JavaMailSender mailSender;
+
+	@MockBean
+	private BudgetService budgetService;
+
+	@MockBean
+	private DashboardService dashboardService;
+
 	@Test
 	void contextLoads() {
 	}
-
 }
