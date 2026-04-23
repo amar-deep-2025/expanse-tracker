@@ -2,11 +2,14 @@ package com.amar.fullstack.expanse_tracker_backend;
 
 import com.amar.fullstack.expanse_tracker_backend.notification.strategy.EmailNotificationStrategy;
 import com.amar.fullstack.expanse_tracker_backend.notification.strategy.SmsNotificationStrategy;
+import com.amar.fullstack.expanse_tracker_backend.service.AuthService;
 import com.amar.fullstack.expanse_tracker_backend.service.OtpService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
@@ -24,6 +27,15 @@ class ExpanseTrackerBackendApplicationTests {
 
 	@MockBean
 	private StringRedisTemplate stringRedisTemplate;
+
+	@MockBean
+	private AuthService authService;
+
+	@MockBean
+	private RedisConnectionFactory redisConnectionFactory;
+
+	@MockBean
+	private PasswordEncoder passwordEncoder;
 
 	@Test
 	void contextLoads() {
