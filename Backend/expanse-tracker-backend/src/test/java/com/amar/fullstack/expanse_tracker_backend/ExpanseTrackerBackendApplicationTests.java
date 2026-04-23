@@ -15,25 +15,6 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class ExpanseTrackerBackendApplicationTests {
 
-	@MockBean
-	private EmailNotificationStrategy emailNotificationStrategy;
-
-	@MockBean
-	private SmsNotificationStrategy smsNotificationStrategy;
-
-	@MockBean
-	private JavaMailSender mailSender;
-
-	@MockBean
-	private BudgetService budgetService;
-
-	@MockBean
-	private DashboardService dashboardService;
-
-
-	@MockBean
-	private StringRedisTemplate stringRedisTemplate;
-
 	@Test
 	void contextLoads() {
 	}
