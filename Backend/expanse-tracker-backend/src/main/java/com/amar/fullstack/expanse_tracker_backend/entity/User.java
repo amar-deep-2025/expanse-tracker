@@ -43,7 +43,10 @@ public class User {
 
     private Long otpExpiry;
 
-    // ===== GETTERS & SETTERS =====
+    @Column(nullable = false)
+    private boolean isPremium=false;
+
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getEmail() { return email; }
@@ -65,4 +68,11 @@ public class User {
     public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
     public void setOtp(String otp) { this.otp = otp; }
     public void setOtpExpiry(Long otpExpiry) { this.otpExpiry = otpExpiry; }
+        public boolean isPremium() {
+            return isPremium;
+        }
+
+    public void setPremium(boolean premium) {
+        this.isPremium=premium;
+    }
 }
