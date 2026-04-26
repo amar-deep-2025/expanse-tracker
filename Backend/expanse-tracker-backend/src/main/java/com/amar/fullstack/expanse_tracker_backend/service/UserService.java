@@ -1,21 +1,26 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
+import com.amar.fullstack.expanse_tracker_backend.entity.NotificationType;
 import com.amar.fullstack.expanse_tracker_backend.exception.UnAuthorizedException;
 import com.amar.fullstack.expanse_tracker_backend.mapping.UserMapper;
 import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.Role;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
+import com.amar.fullstack.expanse_tracker_backend.notification.service.NotificationService;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserService {
@@ -26,9 +31,16 @@ public class UserService {
 
     private PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepo,PasswordEncoder passwordEncoder) {
+    private final OtpService otpService;
+
+    private final StringRedisTemplate redisTemplate;
+    private final NotificationService notificationService;
+    public UserService(UserRepository userRepo,PasswordEncoder passwordEncoder, OtpService otpService, StringRedisTemplate redisTemplate, NotificationService notificationService) {
         this.userRepo = userRepo;
         this.passwordEncoder=passwordEncoder;
+        this.otpService=otpService;
+        this.redisTemplate=redisTemplate;
+        this.notificationService=notificationService;
     }
 
     public Optional<User> getCurrentUser(String email) {
@@ -149,51 +161,166 @@ public class UserService {
         return userRepo.save(user);
     }
 
-    public UserResponseDto changeEmail(Long userId, EmailChangeRequest request) {
-        logger.info("Change email requested for userId: {}", userId);
+    public void changeEmail(Long userId, EmailChangeRequest request) {
+
         String newEmail = request.getNewEmail().trim().toLowerCase();
 
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         if (user.getEmail().equalsIgnoreCase(newEmail)) {
-            logger.warn("Same email provided for userId: {}", userId);
-            throw new IllegalArgumentException(
-                    "New email cannot be same as current email");
+            throw new IllegalArgumentException("New email cannot be same as current email");
         }
+
         if (userRepo.existsByEmail(newEmail)) {
-            logger.warn("Email already in use");
             throw new IllegalArgumentException("Email already in use");
         }
+
+        String otp = otpService.generateOtp();
+
+        otpService.saveOtp("EMAIL_CHANGE_OTP:" + userId, otp);
+
+        redisTemplate.opsForValue().set("EMAIL_CHANGE_NEW_EMAIL:" + userId, newEmail, 5, TimeUnit.MINUTES);
+
+        NotificationRequest notify = new NotificationRequest();
+        notify.setSubject("Email Change OTP");
+        notify.setEmail(newEmail);
+        notify.setMessage(
+                "Hello,\n\n" +
+                        "You have requested to perform a secure action on your Expanse Tracker account.\n\n" +
+                        "Your One-Time Password (OTP) is:\n\n" +
+                        otp + "\n\n" +
+                        "This OTP is valid for the next 5 minutes. Please do not share it with anyone.\n\n" +
+                        "If you did not initiate this request, please ignore this email or contact support immediately.\n\n" +
+                        "----------------------------------\n" +
+                        "This is a system-generated email. Please do not reply to this message.\n\n" +
+                        "Regards,\n" +
+                        "Expanse Tracker Team"
+        );
+        notify.setTypes(List.of(
+                NotificationType.EMAIL
+        ));
+        notificationService.send(notify);
+    }
+
+    public UserResponseDto verifyEmailChange(Long userId, String otp) {
+
+        boolean isValid = otpService.verifyOtp("EMAIL_CHANGE_OTP:" + userId, otp);
+
+        if (!isValid) {
+            throw new IllegalArgumentException("Invalid or expired OTP");
+        }
+
+        String newEmail = redisTemplate.opsForValue()
+                .get("EMAIL_CHANGE_NEW_EMAIL:" + userId);
+
+        if (newEmail == null) {
+            throw new IllegalArgumentException("Request expired");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         user.setEmail(newEmail);
         User updatedUser = userRepo.save(user);
-        logger.info("Email changed successfully for userId: {}", userId);
+
+        redisTemplate.delete("EMAIL_CHANGE_NEW_EMAIL:" + userId);
+
         return UserMapper.toDto(updatedUser);
     }
 
-    public void changePassword(Long userId, PasswordChangeRequestDto request){
-        User user=userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User not found with id: "+userId));
-        if (!passwordEncoder.matches(request.getOldPassword(),
-                user.getPassword())){
+    public void changePassword(Long userId, PasswordChangeRequestDto request) {
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Old password is incorrect");
         }
+
         if (request.getOldPassword().equals(request.getNewPassword())) {
-            logger.warn("Same password attempt for userId: {}", userId);
-            throw new IllegalArgumentException(
-                    "New password must be different from old password");
+            throw new IllegalArgumentException("New password must be different from old password");
         }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepo.save(user);
+
+        String otp = otpService.generateOtp();
+
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        otpService.saveOtp("PASSWORD_CHANGE_OTP:" + userId, otp);
+        redisTemplate.opsForValue().set("PASSWORD_CHANGE_NEW_PASSWORD:" + userId,
+                encodedPassword, 5, TimeUnit.MINUTES);
+
+        NotificationRequest notify = new NotificationRequest();
+        notify.setSubject("Password Change OTP");
+        notify.setEmail(user.getEmail());
+        notify.setMessage(
+                "Hello,\n\n" +
+                        "Your One-Time Password (OTP) is:\n\n" +
+                        otp + "\n\n" +
+                        "This OTP is valid for 5 minutes. Please do not share it with anyone.\n\n" +
+                        "If you did not request this, please ignore this message.\n\n" +
+                        "----------------------------------\n" +
+                        "This is a system-generated email. Please do not reply.\n\n" +
+                        "Regards,\n" +
+                        "Expanse Tracker Team"
+        );
+        notify.setTypes(List.of(
+                NotificationType.EMAIL
+        ));
+        notificationService.send(notify);
     }
 
+    public void verifyPasswordChange(Long userId, String otp) {
 
-    public void deleteCurrentUser(User user) {
-        logger.info("Deleting current user: {}", user.getId());
-        User currUser = userRepo.findById(user.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found")
-                );
-        userRepo.delete(currUser);
-        logger.info("User deleted successfully: {}", user.getId());
+        boolean isValid = otpService.verifyOtp("PASSWORD_CHANGE_OTP:" + userId, otp);
+
+        if (!isValid) {
+            throw new IllegalArgumentException("Invalid or expired OTP");
+        }
+
+        String newPassword = redisTemplate.opsForValue()
+                .get("PASSWORD_CHANGE_NEW_PASSWORD:" + userId);
+
+        if (newPassword == null) {
+            throw new IllegalArgumentException("Request expired");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setPassword(newPassword);
+        userRepo.save(user);
+
+        redisTemplate.delete("PASSWORD_CHANGE_NEW_PASSWORD:" + userId);
+
+        NotificationRequest notify = new NotificationRequest();
+        notify.setSubject("Password Changed Successfully");
+        notify.setEmail(user.getEmail());
+        notify.setMessage(
+                "Hello,\n\n" +
+                        "Your password has been changed successfully for your Expanse Tracker account.\n\n" +
+                        "If you did not perform this action, please contact support immediately.\n\n" +
+                        "----------------------------------\n" +
+                        "This is a system-generated email. Please do not reply to this message.\n\n" +
+                        "Regards,\n" +
+                        "Expanse Tracker Team"
+        );
+        notify.setTypes(List.of(
+                NotificationType.EMAIL
+        ));
+
+        notificationService.send(notify);
+    }
+
+    public void deleteCurrentUser(Long userId, String password) {
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+
+        userRepo.delete(user);
     }
 }
