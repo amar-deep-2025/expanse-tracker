@@ -46,4 +46,17 @@ public class OtpService {
 
         redisTemplate.opsForValue().set(key,value,5,TimeUnit.MINUTES);
     }
+    public boolean verifyOtp(String key, String otp) {
+        String storedOtp = redisTemplate.opsForValue().get(key);
+
+        if (storedOtp == null) {
+            return false;
+        }
+        if (storedOtp.equals(otp)) {
+            redisTemplate.delete(key); // ✅ one-time use
+            return true;
+        }
+
+        return false;
+    }
 }
