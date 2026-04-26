@@ -31,6 +31,7 @@ public class AuthService {
     private NotificationService notificationService;
     private final OtpService otpService;
     private final StringRedisTemplate redisTemplate;
+
     public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, NotificationService notificationService,OtpService otpService,StringRedisTemplate redisTemplate) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
@@ -38,6 +39,7 @@ public class AuthService {
         this.notificationService=notificationService;
         this.otpService=otpService;
         this.redisTemplate=redisTemplate;
+
     }
 
     public void register(RegisterRequest request) {
@@ -49,7 +51,7 @@ public class AuthService {
         }
 
         String otp = otpService.generateOtp();
-        otpService.saveOtp(request.getEmail(), otp);
+        otpService.saveOtp("REGISTER: "+request.getEmail(), otp);
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
@@ -96,7 +98,7 @@ public class AuthService {
     }
     public void verifyOtp(VerifyOtpRequest request){
 
-        String storedOtp = otpService.getOtp(request.getEmail());
+        String storedOtp = otpService.getOtp("REGISTER GET OTP: "+request.getEmail());
 
         if (storedOtp == null){
             throw new RuntimeException("OTP Expired");
