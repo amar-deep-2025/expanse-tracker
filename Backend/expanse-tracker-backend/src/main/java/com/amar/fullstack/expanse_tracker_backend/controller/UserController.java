@@ -29,27 +29,18 @@ public class UserController {
     public UserController(UserService userService){
         this.userService = userService;
     }
-
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(Authentication auth){
-        logger.info("Get current user API called");
         User user = (User) auth.getPrincipal();
         return ResponseEntity.ok(user);
     }
 
     @GetMapping()
-    public ResponseEntity<List<User>> findAll(Authentication auth){
-        logger.info("Get all users API called");
-        User user = (User) auth.getPrincipal();
-        List<User> allUsers= userService.getAllUsers();
-        return ResponseEntity.ok(allUsers);
+    public ResponseEntity<List<User>> findAll(){
+        return ResponseEntity.ok(userService.getAllUsers());
     }
-
-
     @GetMapping("/{id}")
-    public ResponseEntity<User> getById(Authentication auth, @PathVariable Long id){
-        logger.info("Get user by id API called: {}", id);
-        User user = (User) auth.getPrincipal();
+    public ResponseEntity<User> getById(@PathVariable Long id){
         return ResponseEntity.ok(userService.getById(id));
     }
 
@@ -57,66 +48,83 @@ public class UserController {
     public ResponseEntity<?> uploadProfile(
             @RequestParam("file") MultipartFile file,
             Authentication auth) throws IOException {
-        logger.info("Upload profile image API called");
+
         User user = (User) auth.getPrincipal();
-        String email = user.getEmail();
-        logger.debug("Uploading profile image for user");
-        userService.uploadProfileImage(email, file);
-        logger.info("Profile image updated successfully");
+        userService.uploadProfileImage(user.getEmail(), file);
+
         return ResponseEntity.ok("Profile updated successfully");
     }
-    @PatchMapping("/{id}/role")
-    public ResponseEntity<?> EditRole(@PathVariable Long id,@RequestParam String role, Authentication auth){
-        logger.info("Update user role API called for user id:{} with role: {}", id, role);
-        User user = (User) auth.getPrincipal();
-        User updateUser=userService.updateUserRole(id, role);
-        logger.info("User role updated successfully for user id: {}", id);
-        return ResponseEntity.ok(updateUser);
 
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<User> editRole(@PathVariable Long id,
+                                         @RequestParam String role){
+        return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
 
     @PutMapping("/me")
     public ResponseEntity<User> updateProfile(
             @RequestBody UpdateProfileRequest request,
             Authentication auth) {
-        logger.info("Update profile API called");
+
         User user = (User) auth.getPrincipal();
-        User updatedUser = userService.updateProfile(user.getId(), request);
-        logger.info("Profile updated successfully for user: {}", user.getEmail());
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(userService.updateProfile(user.getId(), request));
     }
 
     @PatchMapping("/me/change-email")
-    public ResponseEntity<UserResponseDto> changeEmail(
+    public ResponseEntity<?> changeEmail(
             @Valid @RequestBody EmailChangeRequest request,
             Authentication auth){
-        logger.info("Change email API called");
-        User user = (User) auth.getPrincipal();
-        UserResponseDto response = userService.changeEmail(user.getId(), request);
-        logger.info("Email changed successfully for user: {}", user.getEmail());
-        return ResponseEntity.ok(response);
 
+        User user = (User) auth.getPrincipal();
+
+        userService.changeEmail(user.getId(), request);
+
+        return ResponseEntity.ok("OTP sent to new email");
     }
 
+    @PatchMapping("/me/verify-email")
+    public ResponseEntity<UserResponseDto> verifyEmail(
+            @RequestParam String otp,
+            Authentication auth){
+
+        User user = (User) auth.getPrincipal();
+
+        return ResponseEntity.ok(
+                userService.verifyEmailChange(user.getId(), otp)
+        );
+    }
     @PatchMapping("/me/change-password")
     public ResponseEntity<?> changePassword(
             @Valid @RequestBody PasswordChangeRequestDto request,
             Authentication auth) {
-        logger.info("Change password API called");
+
         User user = (User) auth.getPrincipal();
+
         userService.changePassword(user.getId(), request);
-        logger.info("Password changed successfully for user: {}", user.getEmail());
+
+        return ResponseEntity.ok("OTP sent to email");
+    }
+
+    @PatchMapping("/me/verify-password")
+    public ResponseEntity<?> verifyPassword(
+            @RequestParam String otp,
+            Authentication auth){
+
+        User user = (User) auth.getPrincipal();
+
+        userService.verifyPasswordChange(user.getId(), otp);
+
         return ResponseEntity.ok("Password changed successfully");
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteCurrentUser(Authentication auth) {
+    public ResponseEntity<Void> deleteCurrentUser(
+            @RequestParam String password,
+            Authentication auth) {
 
         User user = (User) auth.getPrincipal();
 
-        logger.info("Delete request for logged-in user: {}", user.getId());
-
-        userService.deleteCurrentUser(user);
+        userService.deleteCurrentUser(user.getId(), password);
 
         return ResponseEntity.noContent().build();
     }
