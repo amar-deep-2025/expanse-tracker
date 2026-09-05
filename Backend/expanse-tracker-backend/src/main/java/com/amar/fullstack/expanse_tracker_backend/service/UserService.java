@@ -35,12 +35,14 @@ public class UserService {
 
     private final StringRedisTemplate redisTemplate;
     private final NotificationService notificationService;
-    public UserService(UserRepository userRepo,PasswordEncoder passwordEncoder, OtpService otpService, StringRedisTemplate redisTemplate, NotificationService notificationService) {
+    private final UserMapper userMapper;
+    public UserService(UserRepository userRepo,PasswordEncoder passwordEncoder, OtpService otpService, StringRedisTemplate redisTemplate, NotificationService notificationService, UserMapper userMapper) {
         this.userRepo = userRepo;
         this.passwordEncoder=passwordEncoder;
         this.otpService=otpService;
         this.redisTemplate=redisTemplate;
         this.notificationService=notificationService;
+        this.userMapper=userMapper;
     }
 
     public Optional<User> getCurrentUser(String email) {
@@ -56,6 +58,10 @@ public class UserService {
                     logger.warn("User not found");
                     return Optional.empty();
                 });
+    }
+
+    public UserResponseDto getCurrentUser(User user){
+        return userMapper.toDto(user);
     }
 
     public List<User> getAllUsers(){

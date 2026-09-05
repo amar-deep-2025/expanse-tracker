@@ -97,9 +97,8 @@ public class AuthService {
         logger.info("OTP sent to email: {} and phone: {}", request.getEmail(), request.getPhone());
     }
     public void verifyOtp(VerifyOtpRequest request){
-
-        String storedOtp = otpService.getOtp("REGISTER GET OTP: "+request.getEmail());
-
+        String otpKey="REGISTER: "+request.getEmail();
+        String storedOtp = otpService.getOtp(otpKey);
         if (storedOtp == null){
             throw new RuntimeException("OTP Expired");
         }

@@ -30,9 +30,10 @@ public class UserController {
         this.userService = userService;
     }
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(Authentication auth){
+    public ResponseEntity<UserResponseDto> getCurrentUser(Authentication auth){
         User user = (User) auth.getPrincipal();
-        return ResponseEntity.ok(user);
+
+        return ResponseEntity.ok(userService.getCurrentUser(user));
     }
 
     @GetMapping()

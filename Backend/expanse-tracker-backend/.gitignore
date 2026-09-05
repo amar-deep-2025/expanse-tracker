@@ -34,5 +34,3 @@ build/
 
 # 🔥 IMPORTANT (ADD THIS)
 .env
-application-dev.properties
-application-local.properties

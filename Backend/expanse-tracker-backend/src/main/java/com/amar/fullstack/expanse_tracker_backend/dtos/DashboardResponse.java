@@ -14,13 +14,14 @@ public class DashboardResponse {
     private Double todayExpense;
     private Map<String, Double> categorySummary;
     private List<RecentExpanseDto> recentExpenses;
+    private String aiInsight;
 
 
     public DashboardResponse() {
     }
 
     public DashboardResponse(Double totalIncome,Double totalBudget,Double balance,Double budgetRemaining,Double totalExpense, Double monthlyExpense, Double todayExpense,
-            Map<String, Double> categorySummary, List<RecentExpanseDto> recentExpenses) {
+            Map<String, Double> categorySummary, List<RecentExpanseDto> recentExpenses){
         this.totalIncome=totalIncome;
         this.totalBudget=totalBudget;
         this.balance=balance;
@@ -102,5 +103,13 @@ public class DashboardResponse {
 
     public void setBudgetRemaining(Double budgetRemaining) {
         this.budgetRemaining = budgetRemaining;
+    }
+
+    public String getAiInsight() {
+        return aiInsight;
+    }
+
+    public void setAiInsight(String aiInsight) {
+        this.aiInsight = aiInsight;
     }
 }

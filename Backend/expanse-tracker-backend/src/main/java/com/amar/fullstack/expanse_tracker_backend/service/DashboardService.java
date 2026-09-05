@@ -5,6 +5,7 @@ import com.amar.fullstack.expanse_tracker_backend.entity.Type;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.repository.BudgetRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
+import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,10 +20,15 @@ public class DashboardService {
 
     private final ExpanseRepository expRepo;
     private final BudgetRepository budgetRepo;
-
-    public DashboardService(ExpanseRepository expRepo, BudgetRepository budgetRepo) {
+    private final AiFacadeService aiFacadeService;
+    private final UserRepository userRepo;
+    public DashboardService(ExpanseRepository expRepo, BudgetRepository budgetRepo,
+                            AiFacadeService aiFacadeService,
+                            UserRepository userRepo) {
         this.expRepo = expRepo;
         this.budgetRepo = budgetRepo;
+        this.aiFacadeService = aiFacadeService;
+        this.userRepo = userRepo;
     }
 
     // 🔥 DEFAULT DASHBOARD
@@ -58,7 +64,7 @@ public class DashboardService {
 
         List<RecentExpanseDto> recentList = getRecentExpenses(user);
 
-        return new DashboardResponse(
+        DashboardResponse response= new DashboardResponse(
                 income,
                 budget,                     // ✅ correct order
                 income - expense,
@@ -69,9 +75,16 @@ public class DashboardService {
                 categoryMap,
                 recentList
         );
+        try {
+            String insight = aiFacadeService.generateInsight(response);
+            response.setAiInsight(insight);
+        } catch (Exception e) {
+            System.out.println("AI failed: " + e.getMessage());
+            response.setAiInsight("AI insight unavailable");
+        }
+        return response;
     }
 
-    // 🔥 DATE FILTER DASHBOARD
     public DashboardResponse getSummaryByDate(
             User user,
             LocalDateTime start,
@@ -294,7 +307,8 @@ public class DashboardService {
 
     public DashboardResponse getSummaryByUserId(Long userId) {
 
-        User user = new User();
+        User user=userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
         user.setId(userId);
 
         return getSummary(user);

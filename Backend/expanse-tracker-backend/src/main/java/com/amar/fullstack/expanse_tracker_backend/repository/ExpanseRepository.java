@@ -79,4 +79,6 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
         @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expanse e WHERE e.user.id = :userId AND e.type = :type")
         double getTotalByType(@Param("userId") Long userId,
                               @Param("type") Type type);
+
+    List<Expanse> findByUserId(Long userId);
 }
