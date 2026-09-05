@@ -47,14 +47,16 @@ public class UserController {
     }
 
     @PostMapping("/upload-image")
-    public ResponseEntity<?> uploadProfile(
+    public ResponseEntity<Map<String,String>> uploadProfile(
             @RequestParam("file") MultipartFile file,
             Authentication auth) throws IOException {
 
         User user = (User) auth.getPrincipal();
         userService.uploadProfileImage(user.getEmail(), file);
 
-        return ResponseEntity.ok("Profile updated successfully");
+        return ResponseEntity.ok(
+                Map.of("message", "Image uploaded successfully")
+        );
     }
 
     @PatchMapping("/{id}/role")
