@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -63,7 +64,7 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<User> updateProfile(
+    public ResponseEntity<UserResponseDto> updateProfile(
             @RequestBody UpdateProfileRequest request,
             Authentication auth) {
 
@@ -95,7 +96,7 @@ public class UserController {
         );
     }
     @PatchMapping("/me/change-password")
-    public ResponseEntity<?> changePassword(
+    public ResponseEntity<Map<String,String>> changePassword(
             @Valid @RequestBody PasswordChangeRequestDto request,
             Authentication auth) {
 
@@ -103,11 +104,13 @@ public class UserController {
 
         userService.changePassword(user.getId(), request);
 
-        return ResponseEntity.ok("OTP sent to email");
+        return ResponseEntity.ok(
+                Map.of("message","OTP sent to email")
+        );
     }
 
     @PatchMapping("/me/verify-password")
-    public ResponseEntity<?> verifyPassword(
+    public ResponseEntity<Map<String, String>> verifyPassword(
             @RequestParam String otp,
             Authentication auth){
 
@@ -115,11 +118,13 @@ public class UserController {
 
         userService.verifyPasswordChange(user.getId(), otp);
 
-        return ResponseEntity.ok("Password changed successfully");
+        return ResponseEntity.ok(
+                Map.of("message", "Password changed successfully")
+        );
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteCurrentUser(
+    public ResponseEntity<Map<String,String>> deleteCurrentUser(
             @RequestParam String password,
             Authentication auth) {
 
@@ -127,6 +132,8 @@ public class UserController {
 
         userService.deleteCurrentUser(user.getId(), password);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                Map.of("message","User account deleted successfully")
+        );
     }
 }

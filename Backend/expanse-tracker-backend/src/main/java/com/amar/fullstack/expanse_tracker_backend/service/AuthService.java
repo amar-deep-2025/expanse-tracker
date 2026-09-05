@@ -88,8 +88,8 @@ public class AuthService {
         notify.setSubject("Verify your email");
 
         notify.setTypes(List.of(
-                NotificationType.EMAIL,
-                NotificationType.SMS
+                NotificationType.EMAIL
+//                NotificationType.SMS
         ));
 
         notificationService.send(notify);
