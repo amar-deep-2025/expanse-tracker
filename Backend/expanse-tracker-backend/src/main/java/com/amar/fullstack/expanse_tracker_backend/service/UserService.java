@@ -64,22 +64,26 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-    public List<User> getAllUsers(){
+    public List<UserResponseDto> getAllUsers(){
         logger.info("Fetching all users");
-        List<User> users = userRepo.findAll();
-        logger.debug("Total users found: {}", users.size());
-        return users;
+        List<UserResponseDto> responseDtos= userRepo.findAll().stream()
+                .map(UserMapper::toDto)
+                .toList();
+        logger.debug("Total users found: {}", responseDtos.size());
+        return responseDtos;
     }
 
-    public User getById(Long id) {
+    public UserResponseDto getById(Long id) {
 
         logger.info("Fetching user by id: {}", id);
-
-        return userRepo.findById(id)
+         UserResponseDto responseDto= userRepo.findById(id)
+                .map(UserMapper::toDto)
                 .orElseThrow(() -> {
                     logger.warn("User not found with id: {}", id);
-                    return new ResourceNotFoundException("User not found");
+                    return new ResourceNotFoundException("User not found with id: " + id);
                 });
+
+         return responseDto;
     }
 
     public void uploadProfileImage(String email, MultipartFile file) throws IOException {
@@ -132,7 +136,7 @@ public class UserService {
         logger.info("User profile updated successfully");
     }
 
-    public User updateUserRole(Long userId, String role) {
+    public UserResponseDto updateUserRole(Long userId, String role) {
         logger.info("Entered updateUserRole method with userId:{} and role: {}", userId, role);
         User existingUser = userRepo.findById(userId)
                 .orElseThrow(() -> {
@@ -152,10 +156,10 @@ public class UserService {
                 savedUser.getId(),
                 savedUser.getRole());
 
-        return savedUser;
+        return UserMapper.toDto(savedUser);
     }
 
-    public User updateProfile(Long userId, UpdateProfileRequest request){
+    public UserResponseDto updateProfile(Long userId, UpdateProfileRequest request){
         logger.info("Entered UpdateProfile method with userId: {}", userId);
         User user=userRepo.findById(userId).orElseThrow(()->{
             logger.warn("User not found with id: {}", userId);
@@ -164,7 +168,8 @@ public class UserService {
         user.setName(request.getName());
         user.setPhone(request.getPhone());
         logger.info("User profile updated successfully for userId: {}", userId);
-        return userRepo.save(user);
+        User updateUser= userRepo.save(user);
+        return UserMapper.toDto(updateUser);
     }
 
     public void changeEmail(Long userId, EmailChangeRequest request) {

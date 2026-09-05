@@ -37,11 +37,11 @@ public class UserController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<User>> findAll(){
+    public ResponseEntity<List<UserResponseDto>> findAll(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
     @GetMapping("/{id}")
-    public ResponseEntity<User> getById(@PathVariable Long id){
+    public ResponseEntity<UserResponseDto> getById(@PathVariable Long id){
         return ResponseEntity.ok(userService.getById(id));
     }
 
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/role")
-    public ResponseEntity<User> editRole(@PathVariable Long id,
+    public ResponseEntity<UserResponseDto> editRole(@PathVariable Long id,
                                          @RequestParam String role){
         return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
