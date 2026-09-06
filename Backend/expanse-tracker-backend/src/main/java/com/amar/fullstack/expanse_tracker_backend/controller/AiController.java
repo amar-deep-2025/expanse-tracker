@@ -50,4 +50,20 @@ public class AiController {
 
         return aiFacadeService.generateInsight(dashboardData);
     }
+
+    @GetMapping("/custom")
+    public String customQuestion(
+            @RequestParam String prompt,
+            Authentication auth
+    ) {
+        User user = (User) auth.getPrincipal();
+
+        DashboardResponse dashboardData =
+                dashboardService.getSummaryByUserId(user.getId());
+
+        return aiFacadeService.generateCustomAnswer(
+                prompt,
+                dashboardData
+        );
+    }
 }
