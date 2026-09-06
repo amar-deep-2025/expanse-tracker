@@ -9,13 +9,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.aspectj.weaver.Lint;
+
 import org.springframework.stereotype.Component;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.channels.ScatteringByteChannel;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,7 +22,7 @@ public class CategoryReportStrategy implements  ReportStrategy{
 
 
     private final DashboardService dashboardService;
-    public CategoryReportStrategy(ExpanseService expanseService,DashboardService dashboardService){
+    public CategoryReportStrategy(DashboardService dashboardService){
         this.dashboardService= dashboardService;
     }
 

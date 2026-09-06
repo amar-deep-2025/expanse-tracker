@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -80,5 +81,17 @@ public interface ExpanseRepository extends JpaRepository<Expanse, Long> {
         double getTotalByType(@Param("userId") Long userId,
                               @Param("type") Type type);
 
-    List<Expanse> findByUserId(Long userId);
+        @Query("""
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM Expanse e
+        WHERE e.user.id = :userId
+        AND e.type = 'EXPENSE'
+        AND YEAR(e.expanseDate) = :year
+        AND MONTH(e.expanseDate) = :month
+        """)
+        public BigDecimal getTotalExpenseByMonth(
+                @Param("userId") Long userId,
+                @Param("year") int year,
+                @Param("month") int month
+        );
 }

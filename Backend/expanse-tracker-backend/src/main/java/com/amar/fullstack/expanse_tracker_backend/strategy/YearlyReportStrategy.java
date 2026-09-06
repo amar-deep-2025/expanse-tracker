@@ -13,17 +13,17 @@ import java.time.Year;
 import java.util.List;
 
 @Component
-public class MonthlyReportStrategy implements ReportStrategy {
+public class YearlyReportStrategy implements ReportStrategy {
 
     private final DashboardService dashboardService;
 
-    public MonthlyReportStrategy(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
+    public YearlyReportStrategy(DashboardService dashboardService){
+        this.dashboardService=dashboardService;
     }
 
     @Override
     public ReportType getType() {
-        return ReportType.MONTHLY;
+        return ReportType.YEARLY;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class MonthlyReportStrategy implements ReportStrategy {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Sheet sheet = workbook.createSheet("Monthly Report");
+            Sheet sheet = workbook.createSheet("YEARLY Report");
             int rowNum = 0;
 
             int year = Year.now().getValue();
@@ -54,7 +54,7 @@ public class MonthlyReportStrategy implements ReportStrategy {
 
             Row titleRow = sheet.createRow(rowNum++);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("Monthly Financial Report - " + year);
+            titleCell.setCellValue("Yearly Financial Report - " + year);
             titleCell.setCellStyle(titleStyle);
 
             rowNum++;
