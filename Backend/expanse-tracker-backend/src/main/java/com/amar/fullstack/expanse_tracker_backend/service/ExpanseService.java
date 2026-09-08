@@ -262,8 +262,8 @@ public class ExpanseService {
             );
 
             notify.setTypes(List.of(
-                    NotificationType.EMAIL,
-                    NotificationType.SMS
+                    NotificationType.EMAIL
+                 //   NotificationType.SMS
             ));
 
             notificationService.send(notify);

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/expanses")
+@RequestMapping("/api/expenses")
 public class ExpanseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpanseController.class);

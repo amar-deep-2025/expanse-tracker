@@ -122,7 +122,7 @@ public class DashboardService {
 
         List<RecentExpanseDto> recentList = getRecentExpenses(user);
 
-        return new DashboardResponse(
+        DashboardResponse response=new DashboardResponse(
                 income,
                 budget,
                 income - expense,
@@ -133,6 +133,14 @@ public class DashboardService {
                 categoryMap,
                 recentList
         );
+        try {
+            String insight = aiFacadeService.generateInsight(response);
+            response.setAiInsight(insight);
+        } catch (Exception e) {
+            System.out.println("AI failed: " + e.getMessage());
+            response.setAiInsight("AI insight unavailable");
+        }
+        return response;
     }
 
     // 🔹 RECENT EXPENSES
