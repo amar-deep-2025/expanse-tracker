@@ -96,7 +96,7 @@ public class AuthService {
 
         logger.info("OTP sent to email: {} and phone: {}", request.getEmail(), request.getPhone());
     }
-    public void verifyOtp(VerifyOtpRequest request){
+    public String verifyOtp(VerifyOtpRequest request){
         String otpKey="REGISTER: "+request.getEmail();
         String storedOtp = otpService.getOtp(otpKey);
         if (storedOtp == null){
@@ -146,6 +146,9 @@ public class AuthService {
 
         otpService.deleteOtp(request.getEmail());
         redisTemplate.delete("USER:" + request.getEmail());
+
+        String token=jwtUtil.generateToken(user);
+        return token;
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -180,7 +183,7 @@ public class AuthService {
                 });
         String token = jwtUtil.generateResetToken(user);
 
-        String resetLink="http://localhost:8080/api/auth/reset-password?token="+token;
+        String resetLink="http://localhost:5173/reset-password?token="+token;
 
         NotificationRequest notify = new NotificationRequest();
         notify.setEmail(user.getEmail());

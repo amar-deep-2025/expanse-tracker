@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -32,11 +34,14 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@Valid @RequestBody VerifyOtpRequest request){
+    public ResponseEntity<Map<String,String>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request){
         logger.info("Entered in verifyOtp");
-        authService.verifyOtp(request);
+        String token=authService.verifyOtp(request);
         logger.info("Registration process");
-        return ResponseEntity.ok("User Registered successfully");
+        return ResponseEntity.ok(
+                Map.of("token",token,
+                        "message","user registered successfully"));
+
     }
 
     @PostMapping("/login")

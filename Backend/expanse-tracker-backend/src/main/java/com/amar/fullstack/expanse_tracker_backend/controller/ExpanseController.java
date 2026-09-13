@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -69,15 +70,17 @@ public class ExpanseController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long id,
             Authentication auth) {
         logger.info("Delete expense API called for id: {}", id);
         User user = (User) auth.getPrincipal();
-        expService.deleteExpanse(id, user);
+        String response=expService.deleteExpanse(id, user);
         logger.info("Expense deleted successfully for id: {}", id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                Map.of("message:",response)
+        );
     }
 
 

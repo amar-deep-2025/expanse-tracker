@@ -167,7 +167,7 @@ public class ExpanseService {
     }
 
     @Transactional
-    public void deleteExpanse(Long id, User user) {
+    public String deleteExpanse(Long id, User user) {
 
         Expanse expanse = findExpenseById(id);
         validateOwner(expanse, user);
@@ -180,6 +180,7 @@ public class ExpanseService {
             );
         }
         expRepo.delete(expanse);
+        return "Delete Transaction successfully";
     }
     private ExpanseCategory getCategoryById(Long categoryId, User user) {
 
