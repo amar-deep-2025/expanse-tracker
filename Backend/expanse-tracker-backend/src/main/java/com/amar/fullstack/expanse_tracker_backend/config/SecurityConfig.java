@@ -30,7 +30,7 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/api/auth/**", "/error","/api/auth/verify-otp", "/api/ai/test").permitAll()
+                                                .requestMatchers("/api/auth/**", "/error","/api/auth/verify-otp", "/api/ai/test", "/uploads/**").permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

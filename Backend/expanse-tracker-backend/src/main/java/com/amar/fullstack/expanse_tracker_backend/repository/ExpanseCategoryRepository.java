@@ -1,4 +1,5 @@
 package com.amar.fullstack.expanse_tracker_backend.repository;
+import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseCategoryResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.ExpanseCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 

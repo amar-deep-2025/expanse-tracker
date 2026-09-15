@@ -5,6 +5,7 @@ import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.service.ExpanseCategoryService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,10 +20,12 @@ public class CategoryController {
     public CategoryController(ExpanseCategoryService expanseCategoryService){
         this.expanseCategoryService=expanseCategoryService;
     }
+
+
     @GetMapping
-    public List<ExpanseCategoryResponseDto> getAll(Authentication auth){
+    public List<ExpanseCategoryResponseDto> getAllCategories(Authentication auth){
         User user=(User) auth.getPrincipal();
+
         return expanseCategoryService.getAllCategories(user.getId());
     }
-
 }

@@ -8,8 +8,9 @@ import org.springframework.web.servlet.config.annotation.*;
 public class CorsConfig {
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public WebMvcConfigurer corsConfigurer(){
         return new WebMvcConfigurer() {
+
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
@@ -18,6 +19,19 @@ public class CorsConfig {
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
+            @Override
+            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+
+                String uploadDir =
+                        System.getProperty("user.dir") + "/uploads/";
+                System.out.println("UPLOAD DIRECTORY = " + uploadDir);
+                registry.addResourceHandler("/uploads/**")
+                        .addResourceLocations("file:" + uploadDir);
+            }
+
         };
     }
+
+
+
 }

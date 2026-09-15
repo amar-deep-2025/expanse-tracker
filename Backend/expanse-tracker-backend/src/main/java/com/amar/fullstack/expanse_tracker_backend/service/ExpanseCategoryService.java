@@ -16,10 +16,9 @@ public class ExpanseCategoryService {
     }
     public List<ExpanseCategoryResponseDto> getAllCategories(Long userId) {
 
-        return expanseCategoryRepository.findAll()
+        return expanseCategoryRepository.findByUser_Id(userId)
                 .stream()
                 .map(expanseCategory -> {
-
                     ExpanseCategoryResponseDto dto =
                             new ExpanseCategoryResponseDto();
 
