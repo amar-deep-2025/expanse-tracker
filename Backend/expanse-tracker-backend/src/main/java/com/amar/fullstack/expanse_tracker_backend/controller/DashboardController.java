@@ -28,7 +28,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    // 🔥 DEFAULT DASHBOARD (PAGE LOAD)
+
     @GetMapping("/summary")
     public ResponseEntity<DashboardResponse> getSummary(Authentication auth) {
 

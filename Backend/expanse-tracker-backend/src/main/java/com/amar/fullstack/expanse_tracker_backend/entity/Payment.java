@@ -8,26 +8,18 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name="payments")
 public class Payment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false)
     private String orderId;
-
-
     private String paymentId;
 
-
     private String signature;
-
     @Column(nullable = false)
     private int amount;
-
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

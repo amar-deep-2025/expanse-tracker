@@ -10,29 +10,21 @@ public class Expanse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false)
     private String name;
-
     @Column(nullable = false)
     private Double amount;
-
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private ExpanseCategory category;
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
     private String description;
-
     @Column(name = "expanse_date", nullable = false)
     private LocalDateTime expanseDate;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

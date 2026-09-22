@@ -83,7 +83,7 @@ public class UserController {
 
         userService.changeEmail(user.getId(), request);
 
-        return ResponseEntity.ok("OTP sent to new email");
+        return ResponseEntity.ok("OTP sent to email");
     }
 
     @PatchMapping("/me/verify-email")

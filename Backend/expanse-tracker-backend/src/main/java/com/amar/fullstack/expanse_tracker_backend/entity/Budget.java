@@ -28,35 +28,26 @@ public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false, length = 100)
     private String name;
-
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal budget;
-
     @Column(nullable = false)
     private Integer month;
-
     @Column(nullable = false)
     private Integer year;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,length = 20)
     private BudgetType type;
-
     @ManyToOne
     @JoinColumn(name = "category_id",nullable = true)
     private ExpanseCategory category;
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
-
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

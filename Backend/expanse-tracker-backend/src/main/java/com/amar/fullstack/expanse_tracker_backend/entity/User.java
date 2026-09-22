@@ -5,44 +5,31 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "users")
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-
     @Column(unique = true, nullable = false)
     private String email;
-
     @Column(nullable = false)
     private String password;
-
     @Column(nullable = false)
     private String phone;
-
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
-
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
-
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
     private String profileImage;
-
     // 🔐 OTP fields (SAFE: nullable)
     @Column(length = 6)
     private String otp;
-
     private Long otpExpiry;
-
     @Column(nullable = false)
     private boolean isPremium=false;
 

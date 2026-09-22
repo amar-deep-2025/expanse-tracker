@@ -2,10 +2,12 @@ package com.amar.fullstack.expanse_tracker_backend.mapping;
 import com.amar.fullstack.expanse_tracker_backend.dtos.DashboardResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.ExpanseResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.dtos.RecentExpanseDto;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class DashboardMapper {
 
     public static DashboardResponse toDto(
