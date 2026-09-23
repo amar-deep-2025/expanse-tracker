@@ -36,7 +36,7 @@ public class EmailNotificationStrategy implements NotificationStrategy {
 
         Map<String, Object> email = new HashMap<>();
 
-        email.put("from", "onboarding@resend.dev");
+        email.put("from", "Expense Tracker Team");
         email.put("to", request.getEmail());
         email.put("subject", subject);
         email.put("text", body);
