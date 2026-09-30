@@ -33,7 +33,7 @@ public class OtpService {
     }
 
     public void sendOtp(String email, String otp){
-        System.out.println("OTP"+otp);
+        //System.out.println("OTP"+otp);
     }
 
     public void saveUserData(RegisterRequest request){

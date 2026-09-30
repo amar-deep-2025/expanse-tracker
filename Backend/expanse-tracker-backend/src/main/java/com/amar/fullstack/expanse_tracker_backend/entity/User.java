@@ -33,6 +33,9 @@ public class User {
     @Column(nullable = false)
     private boolean isPremium=false;
 
+    @Column(nullable=false, name="is_active")
+    private boolean isActive=true;
+
 
     public Long getId() { return id; }
     public String getName() { return name; }
@@ -53,13 +56,23 @@ public class User {
     public void setPhone(String phone) { this.phone = phone; }
     public void setRole(Role role) { this.role = role; }
     public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
-    public void setOtp(String otp) { this.otp = otp; }
-    public void setOtpExpiry(Long otpExpiry) { this.otpExpiry = otpExpiry; }
-        public boolean isPremium() {
-            return isPremium;
-        }
-
     public void setPremium(boolean premium) {
         this.isPremium=premium;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

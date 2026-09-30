@@ -23,7 +23,7 @@ public class RazorpayConfig {
     }
     @PostConstruct
     public void testKeys() {
-        System.out.println("KEY_ID = " +keyId);
-        System.out.println("KEY_SECRET = " +keySecret);
+//        System.out.println("KEY_ID = " +keyId);
+//        System.out.println("KEY_SECRET = " +keySecret);
     }
 }

@@ -15,7 +15,7 @@ public class ReportStrategyFactory {
     public ReportStrategyFactory(List<ReportStrategy> strategies){
         for (ReportStrategy strategy:strategies){
             strategyMap.put(strategy.getType(),strategy);
-            System.out.println("Type "+strategy.getType().name());
+
         }
     }
 

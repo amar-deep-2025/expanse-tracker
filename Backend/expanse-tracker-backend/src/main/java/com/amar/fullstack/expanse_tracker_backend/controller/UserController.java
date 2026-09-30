@@ -37,10 +37,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentUser(user));
     }
 
-    @GetMapping()
-    public ResponseEntity<List<UserResponseDto>> findAll(){
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getById(@PathVariable Long id){
         return ResponseEntity.ok(userService.getById(id));

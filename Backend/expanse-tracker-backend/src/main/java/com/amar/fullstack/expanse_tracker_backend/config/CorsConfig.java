@@ -24,7 +24,6 @@ public class CorsConfig {
 
                 String uploadDir =
                         System.getProperty("user.dir") + "/uploads/";
-                System.out.println("UPLOAD DIRECTORY = " + uploadDir);
                 registry.addResourceHandler("/uploads/**")
                         .addResourceLocations("file:" + uploadDir);
             }
