@@ -1,5 +1,6 @@
 package com.amar.fullstack.expanse_tracker_backend.controller;
 
+import com.amar.fullstack.expanse_tracker_backend.dtos.DashboardResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.UserResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.Role;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
@@ -22,11 +23,14 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final UserService userService;
+    private final DashboardService dashboardService;
 
     public AdminController(UserRepository userRepository,
-                           UserService userService){
+                           UserService userService,
+                           DashboardService dashboardService){
         this.userRepository=userRepository;
         this.userService=userService;
+        this.dashboardService=dashboardService;
     }
 
     @GetMapping("/dashboard")
@@ -49,5 +53,14 @@ public class AdminController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserResponseDto> findById(@PathVariable Long id){
+        return ResponseEntity.ok(userService.getById(id));
+    }
 
+    @GetMapping("/users/{userId}/dashboard")
+    public ResponseEntity<DashboardResponse> getSummaryByUserId(@PathVariable Long userId){
+        DashboardResponse response= dashboardService.getSummaryByUserId(userId);
+        return ResponseEntity.ok(response);
+    }
 }

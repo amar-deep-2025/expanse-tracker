@@ -159,4 +159,6 @@ public class DashboardController {
     private User getCurrentUser(Authentication auth) {
         return (User) auth.getPrincipal();
     }
+
+
 }
