@@ -335,4 +335,18 @@ public class UserService {
 
         userRepo.delete(user);
     }
+    public void deleteUserById(Long userId){
+        User user=userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User not found"));
+
+        userRepo.delete(user);
+    }
+
+    public UserResponseDto updateUserStatus(Long userId, boolean active){
+        User user=userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User Not found"));
+
+        user.setActive(active);
+        User savedUser=userRepo.save(user);
+
+        return UserMapper.toDto(savedUser);
+    }
 }

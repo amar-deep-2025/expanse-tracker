@@ -158,6 +158,9 @@ public class AuthService {
                     logger.warn("Login failed - email not found: {}", request.getEmail());
                     return new InvalidCredentialsExceptions("Invalid email or password");
                 });
+        if (!user.isActive()){
+            throw new RuntimeException("Your account is inactive");
+        }
         boolean isMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
         logger.debug("Password match result for email {}: {}", request.getEmail(), isMatch);
 

@@ -4,14 +4,10 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.DashboardResponse;
 import com.amar.fullstack.expanse_tracker_backend.dtos.UserResponseDto;
 import com.amar.fullstack.expanse_tracker_backend.entity.Role;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
-import com.amar.fullstack.expanse_tracker_backend.service.BudgetService;
 import com.amar.fullstack.expanse_tracker_backend.service.DashboardService;
 import com.amar.fullstack.expanse_tracker_backend.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -62,5 +58,27 @@ public class AdminController {
     public ResponseEntity<DashboardResponse> getSummaryByUserId(@PathVariable Long userId){
         DashboardResponse response= dashboardService.getSummaryByUserId(userId);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<UserResponseDto> editRole(@PathVariable Long id,
+                                                    @RequestParam String role){
+        return ResponseEntity.ok(userService.updateUserRole(id, role));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<String> deleteUserById(@PathVariable Long userId){
+        userService.deleteUserById(userId);
+        return ResponseEntity.ok("User Successfully deleted");
+    }
+
+    @PatchMapping("/users/{userId}/status")
+    public ResponseEntity<UserResponseDto> updateUserStatus(
+            @PathVariable Long userId,
+            @RequestParam boolean active
+    ){
+        return ResponseEntity.ok(
+                userService.updateUserStatus(userId, active)
+        );
     }
 }

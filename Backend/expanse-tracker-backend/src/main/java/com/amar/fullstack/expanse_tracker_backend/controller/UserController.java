@@ -55,12 +55,6 @@ public class UserController {
         );
     }
 
-    @PatchMapping("/{id}/role")
-    public ResponseEntity<UserResponseDto> editRole(@PathVariable Long id,
-                                         @RequestParam String role){
-        return ResponseEntity.ok(userService.updateUserRole(id, role));
-    }
-
     @PutMapping("/me")
     public ResponseEntity<UserResponseDto> updateProfile(
             @RequestBody UpdateProfileRequest request,

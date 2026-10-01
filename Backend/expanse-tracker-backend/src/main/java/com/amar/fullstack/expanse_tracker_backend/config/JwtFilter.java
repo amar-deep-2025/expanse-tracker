@@ -71,7 +71,9 @@ public class JwtFilter extends OncePerRequestFilter {
                         res.getWriter().write("Invalid token");
                         return;
                     }
-
+                    if (!user.isActive()){
+                        throw new RuntimeException("User is inactive");
+                    }
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
                                     user,
