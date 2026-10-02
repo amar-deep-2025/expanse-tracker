@@ -41,7 +41,6 @@ public class DashboardController {
         );
     }
 
-    // 🔥 DATE FILTER DASHBOARD
     @GetMapping("/summary-by-date")
     public ResponseEntity<DashboardResponse> getSummaryByDate(
             Authentication auth,
@@ -94,7 +93,6 @@ public class DashboardController {
         );
     }
 
-    // 🔹 MONTHLY DATA (FOR CHARTS)
     @GetMapping("/monthly")
     public ResponseEntity<List<MonthlyDto>> getMonthly(
             Authentication auth,
@@ -116,7 +114,6 @@ public class DashboardController {
         );
     }
 
-    // 🔹 RECENT EXPENSES
     @GetMapping("/recent")
     public ResponseEntity<List<RecentExpanseDto>> getRecent(Authentication auth) {
 
@@ -129,7 +126,6 @@ public class DashboardController {
         );
     }
 
-    // 🔹 MONTH COMPARISON
     @GetMapping("/compare")
     public ResponseEntity<ComparisonDto> compareMonth(Authentication auth) {
 
@@ -142,7 +138,6 @@ public class DashboardController {
         );
     }
 
-    // 🔹 TOP CATEGORY
     @GetMapping("/top-category")
     public ResponseEntity<CategoryDto> getTopCategory(Authentication auth) {
 
@@ -155,7 +150,6 @@ public class DashboardController {
         );
     }
 
-    // 🔐 GET LOGGED-IN USER
     private User getCurrentUser(Authentication auth) {
         return (User) auth.getPrincipal();
     }

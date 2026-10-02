@@ -3,9 +3,12 @@ import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.Expanse;
 import com.amar.fullstack.expanse_tracker_backend.entity.Type;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
+import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
 import com.amar.fullstack.expanse_tracker_backend.repository.BudgetRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.ExpanseRepository;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,16 +25,17 @@ public class DashboardService {
     private final BudgetRepository budgetRepo;
     private final AiFacadeService aiFacadeService;
     private final UserRepository userRepo;
+    private final Logger log=LoggerFactory.getLogger(DashboardService.class);
     public DashboardService(ExpanseRepository expRepo, BudgetRepository budgetRepo,
                             AiFacadeService aiFacadeService,
-                            UserRepository userRepo) {
+                            UserRepository userRepo,
+                            LoggerFactory log) {
         this.expRepo = expRepo;
         this.budgetRepo = budgetRepo;
         this.aiFacadeService = aiFacadeService;
         this.userRepo = userRepo;
     }
 
-    // 🔥 DEFAULT DASHBOARD
     public DashboardResponse getSummary(User user) {
 
         Long userId = user.getId();
@@ -41,7 +45,7 @@ public class DashboardService {
 
         Double income = defaultZero(expRepo.getTotalIncome(userId));
         Double expense = defaultZero(expRepo.getTotalExpense(userId));
-        Double budget = defaultZero(budgetRepo.getTotalBudget(userId)); // ✅ FIX
+        Double budget = defaultZero(budgetRepo.getTotalBudget(userId));
 
         Double monthlyExpense = defaultZero(
                 expRepo.getExpenseByMonth(userId, now.getMonthValue(), now.getYear())
@@ -66,7 +70,7 @@ public class DashboardService {
 
         DashboardResponse response= new DashboardResponse(
                 income,
-                budget,                     // ✅ correct order
+                budget,
                 income - expense,
                 budget - expense,
                 expense,
@@ -79,7 +83,7 @@ public class DashboardService {
             String insight = aiFacadeService.generateInsight(response);
             response.setAiInsight(insight);
         } catch (Exception e) {
-            System.out.println("AI failed: " + e.getMessage());
+            log.error("AI failed: " + e.getMessage());
             response.setAiInsight("AI insight unavailable");
         }
         return response;
@@ -137,13 +141,12 @@ public class DashboardService {
             String insight = aiFacadeService.generateInsight(response);
             response.setAiInsight(insight);
         } catch (Exception e) {
-            System.out.println("AI failed: " + e.getMessage());
+            log.error("AI failed: " + e.getMessage());
             response.setAiInsight("AI insight unavailable");
         }
         return response;
     }
 
-    // 🔹 RECENT EXPENSES
     public List<RecentExpanseDto> getRecentExpenses(User user) {
         return expRepo.findTop5ByUser_IdOrderByExpanseDateDesc(user.getId())
                 .stream()
@@ -159,7 +162,6 @@ public class DashboardService {
     }
 
 
-    // 🔹 MONTHLY CHART
     public List<MonthlyDto> getMonthly(User user, int year) {
         return expRepo.getMonthlyIncomeExpense(user.getId(), year)
                 .stream()
@@ -197,7 +199,6 @@ public class DashboardService {
                 .toList();
     }
 
-    // 🔹 MONTH COMPARISON (RESTORED ✅)
     public ComparisonDto compareCurrentMonth(Long userId) {
 
         LocalDateTime now = LocalDateTime.now();
@@ -236,7 +237,6 @@ public class DashboardService {
         );
     }
 
-    // 🔹 TOP CATEGORY (RESTORED ✅)
     public CategoryDto getTopCategory(Long userId) {
 
         List<Object[]> data = expRepo.getTopCategory(userId);
@@ -266,7 +266,6 @@ public class DashboardService {
     }
 
 
-    // 🔹 COMMON METHODS
 
     private Double defaultZero(Double value) {
         return value == null ? 0.0 : value; // ✅ FIXED
@@ -316,7 +315,7 @@ public class DashboardService {
     public DashboardResponse getSummaryByUserId(Long userId) {
 
         User user=userRepo.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("found with id: " + userId));
         user.setId(userId);
 
         return getSummary(user);
