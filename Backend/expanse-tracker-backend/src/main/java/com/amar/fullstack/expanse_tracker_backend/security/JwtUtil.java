@@ -1,4 +1,4 @@
-package com.amar.fullstack.expanse_tracker_backend.config;
+package com.amar.fullstack.expanse_tracker_backend.security;
 
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import io.jsonwebtoken.Claims;

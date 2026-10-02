@@ -1,24 +1,23 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
 
-import com.amar.fullstack.expanse_tracker_backend.config.JwtUtil;
+import com.amar.fullstack.expanse_tracker_backend.security.JwtUtil;
 import com.amar.fullstack.expanse_tracker_backend.dtos.*;
 import com.amar.fullstack.expanse_tracker_backend.entity.NotificationType;
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
 import com.amar.fullstack.expanse_tracker_backend.exception.InvalidCredentialsExceptions;
 import com.amar.fullstack.expanse_tracker_backend.exception.ResourceNotFoundException;
 import com.amar.fullstack.expanse_tracker_backend.exception.UserAllreadyExistsException;
+import com.amar.fullstack.expanse_tracker_backend.exception.UserInactiveException;
 import com.amar.fullstack.expanse_tracker_backend.notification.service.NotificationService;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -159,7 +158,7 @@ public class AuthService {
                     return new InvalidCredentialsExceptions("Invalid email or password");
                 });
         if (!user.isActive()){
-            throw new RuntimeException("Your account is inactive");
+            throw new UserInactiveException("User account is inactive. Please contact support.");
         }
         boolean isMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
         logger.debug("Password match result for email {}: {}", request.getEmail(), isMatch);

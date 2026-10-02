@@ -38,10 +38,10 @@ public class AdminController {
         long adminUsers=userRepository.countByRole(Role.ADMIN);
 
         return ResponseEntity.ok(
-                Map.of("totalUsers: ", totalUsers,
-                        "activeUsers: ", activeUsers,
-                        "premiumUsers: ", premiumUsers,
-                        "adminUsers: ", adminUsers)
+                Map.of("totalUsers", totalUsers,
+                        "activeUsers", activeUsers,
+                        "premiumUsers", premiumUsers,
+                        "adminUsers", adminUsers)
         );
     }
     @GetMapping("/users")

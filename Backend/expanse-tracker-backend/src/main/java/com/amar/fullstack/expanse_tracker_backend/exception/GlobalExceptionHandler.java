@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException ex,
             HttpServletRequest request) {
 
-        logger.error("Resource not found: {}", ex.getMessage());
+        logger.warn("Resource not found: {}", ex.getMessage());
 
         ErrorResponseDto error = new ErrorResponseDto(
                 ex.getMessage(),
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex,
             HttpServletRequest request) {
 
-        logger.error("Validation failed");
+        logger.warn("Validation failed");
 
         Map<String, String> errors = new HashMap<>();
 
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
             UnAuthorizedException ex,
             HttpServletRequest request) {
 
-        logger.error("Unauthorized access: {}", ex.getMessage());
+        logger.warn("Unauthorized access: {}", ex.getMessage());
 
         ErrorResponseDto error = new ErrorResponseDto(
                 ex.getMessage(),
@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleUserAlreadyExists(
             UserAllreadyExistsException ex,
             HttpServletRequest request) {
-        logger.error("User already exists: {}", ex.getMessage());
+        logger.warn("User already exists: {}", ex.getMessage());
         ErrorResponseDto error = new ErrorResponseDto(
                 ex.getMessage(),
                 HttpStatus.CONFLICT.value(),
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
             InvalidCredentialsExceptions ex,
             HttpServletRequest request) {
 
-        logger.error("Invalid credentials: {}", ex.getMessage());
+        logger.warn("Invalid credentials: {}", ex.getMessage());
 
         ErrorResponseDto error = new ErrorResponseDto(
                 ex.getMessage(),
@@ -102,12 +102,24 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UserInactiveException.class)
+    public ResponseEntity<ErrorResponseDto> handlerInactive(UserInactiveException ex, HttpServletRequest request){
+        logger.warn("Unexpected error: {}", ex.getMessage(), ex);
+        ErrorResponseDto error=new ErrorResponseDto(
+                "User account is inactive. Please contact support.",
+                HttpStatus.FORBIDDEN.value(),
+                request.getRequestURI()
+
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGlobal(
             Exception ex,
             HttpServletRequest request) {
 
-        logger.error("Unexpected error: {}", ex.getMessage(), ex);
+        logger.warn("Unexpected error: {}", ex.getMessage(), ex);
 
         ErrorResponseDto error = new ErrorResponseDto(
                 "Something went wrong",
@@ -116,4 +128,6 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 }

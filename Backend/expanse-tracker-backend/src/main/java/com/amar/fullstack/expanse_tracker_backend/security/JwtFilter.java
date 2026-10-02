@@ -1,6 +1,7 @@
-package com.amar.fullstack.expanse_tracker_backend.config;
+package com.amar.fullstack.expanse_tracker_backend.security;
 
 import com.amar.fullstack.expanse_tracker_backend.entity.User;
+import com.amar.fullstack.expanse_tracker_backend.exception.UserInactiveException;
 import com.amar.fullstack.expanse_tracker_backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -72,7 +73,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         return;
                     }
                     if (!user.isActive()){
-                        throw new RuntimeException("User is inactive");
+                        throw new UserInactiveException("User account is inactive. Please contact support.");
                     }
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
