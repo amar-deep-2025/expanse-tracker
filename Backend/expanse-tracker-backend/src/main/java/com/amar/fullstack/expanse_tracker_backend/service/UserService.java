@@ -87,7 +87,8 @@ public class UserService {
          return responseDto;
     }
 
-    public void uploadProfileImage(String email, MultipartFile file) throws IOException {
+
+    public void uploadProfileImage(String email, MultipartFile file) {
 
         logger.info("Uploading profile image");
 
@@ -97,45 +98,54 @@ public class UserService {
                     return new ResourceNotFoundException("User not found");
                 });
 
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             logger.warn("Empty file upload attempt");
-            throw new RuntimeException("File is empty");
+            throw new IllegalArgumentException("File is empty");
         }
 
         if (file.getSize() > 2 * 1024 * 1024) {
             logger.warn("File size exceeds limit");
-            throw new RuntimeException("File size exceeds 2MB");
+            throw new IllegalArgumentException("File size exceeds 2MB");
         }
 
         String contentType = file.getContentType();
+
         if (contentType == null || !contentType.startsWith("image/")) {
             logger.warn("Invalid file type upload attempt");
-            throw new RuntimeException("Only image files are allowed");
+            throw new IllegalArgumentException("Only image files are allowed");
         }
 
-        String fileName = System.currentTimeMillis() + "_" +
-                file.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        String originalFileName = file.getOriginalFilename();
+
+        if (originalFileName == null || originalFileName.isBlank()) {
+            throw new IllegalArgumentException("Invalid file name");
+        }
+
+        String fileName = System.currentTimeMillis() + "_"
+                + originalFileName.replaceAll("[^a-zA-Z0-9.\\-]", "_");
 
         String uploadDir = System.getProperty("user.dir") + "/uploads/";
         File folder = new File(uploadDir);
 
-        if (!folder.exists()) {
-            folder.mkdirs();
-            logger.debug("Upload directory created");
+        if (!folder.exists() && !folder.mkdirs()) {
+            logger.error("Failed to create upload directory");
+            throw new RuntimeException("Failed to create upload directory");
         }
 
         try {
-            file.transferTo(new File(uploadDir + fileName));
+            file.transferTo(new File(folder, fileName));
             logger.info("Profile image uploaded successfully");
         } catch (IOException e) {
             logger.error("File upload failed", e);
-            throw new RuntimeException("File upload failed");
+            throw new RuntimeException("File upload failed", e);
         }
+
         user.setProfileImage(fileName);
         userRepo.save(user);
 
         logger.info("User profile updated successfully");
     }
+
 
     public UserResponseDto updateUserRole(Long userId, String role) {
         logger.info("Entered updateUserRole method with userId:{} and role: {}", userId, role);

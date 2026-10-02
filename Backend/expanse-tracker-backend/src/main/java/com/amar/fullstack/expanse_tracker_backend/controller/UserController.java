@@ -10,6 +10,7 @@ import com.amar.fullstack.expanse_tracker_backend.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    @PostMapping("/upload-image")
+    @PostMapping(value="/upload-image",
+    consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String,String>> uploadProfile(
             @RequestParam("file") MultipartFile file,
             Authentication auth) throws IOException {
