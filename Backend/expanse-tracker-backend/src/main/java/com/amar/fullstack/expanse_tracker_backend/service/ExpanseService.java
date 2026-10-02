@@ -60,10 +60,8 @@ public class ExpanseService {
             throw new IllegalArgumentException("Category is required");
         }
 
-        // ✅ resolve type once
         Type type = Type.valueOf(dto.getType());
 
-        // ✅ ONLY expense affects totalAmount
         if (type == Type.EXPENSE) {
             category.setTotalAmount(
                     safe(category.getTotalAmount()) + dto.getAmount()
@@ -74,7 +72,6 @@ public class ExpanseService {
             );
         }
 
-        // ✅ create expense
         Expanse expanse = new Expanse();
         expanse.setName(dto.getName());
         expanse.setType(type);
@@ -129,6 +126,8 @@ public class ExpanseService {
         throw new IllegalArgumentException("Category is required");
     }
 
+
+    @Transactional
     public ExpanseResponseDto updateExpanse(
             Long id,
             ExpanseRequestDto dto,
@@ -139,35 +138,37 @@ public class ExpanseService {
 
         ExpanseCategory oldCategory = expanse.getCategory();
         ExpanseCategory newCategory = resolveCategory(dto, user);
-        if (!oldCategory.getId().equals(newCategory.getId())) {
 
-            oldCategory.setTotalAmount(
-                    safe(oldCategory.getTotalAmount()) - expanse.getAmount()
-            );
-
-            newCategory.setTotalAmount(
-                    safe(newCategory.getTotalAmount()) + dto.getAmount()
-            );
-
-        } else {
-            double diff = dto.getAmount() - expanse.getAmount();
-
-            newCategory.setTotalAmount(
-                    safe(newCategory.getTotalAmount()) + diff
-            );
+        Type newType;
+        try {
+            newType = Type.valueOf(dto.getType());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException(
+                    "Invalid transaction type. Allowed values: EXPENSE, INCOME");
         }
 
+        double oldAmount = expanse.getAmount();
+        double newAmount = dto.getAmount();
+        oldCategory.setTotalAmount(
+                safe(oldCategory.getTotalAmount()) - oldAmount
+        );
+
+        newCategory.setTotalAmount(
+                safe(newCategory.getTotalAmount()) + newAmount
+        );
+
         expanse.setName(dto.getName());
-        expanse.setAmount(dto.getAmount());
+        expanse.setAmount(newAmount);
         expanse.setDescription(dto.getDescription());
-        expanse.setType(Type.valueOf(dto.getType()));
+        expanse.setType(newType);
         expanse.setCategory(newCategory);
 
         return mapToResponse(expRepo.save(expanse));
     }
 
+
     @Transactional
-    public String deleteExpanse(Long id, User user) {
+    public void deleteExpanse(Long id, User user) {
 
         Expanse expanse = findExpenseById(id);
         validateOwner(expanse, user);
@@ -180,7 +181,6 @@ public class ExpanseService {
             );
         }
         expRepo.delete(expanse);
-        return "Delete Transaction successfully";
     }
     private ExpanseCategory getCategoryById(Long categoryId, User user) {
 

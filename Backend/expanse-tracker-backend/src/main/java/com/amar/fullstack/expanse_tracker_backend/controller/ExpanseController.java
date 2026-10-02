@@ -75,11 +75,11 @@ public class ExpanseController {
             Authentication auth) {
         logger.info("Delete expense API called for id: {}", id);
         User user = (User) auth.getPrincipal();
-        String response=expService.deleteExpanse(id, user);
+        expService.deleteExpanse(id, user);
         logger.info("Expense deleted successfully for id: {}", id);
 
         return ResponseEntity.ok(
-                Map.of("message:",response)
+                Map.of("message:","Item deleted successfully")
         );
     }
 
