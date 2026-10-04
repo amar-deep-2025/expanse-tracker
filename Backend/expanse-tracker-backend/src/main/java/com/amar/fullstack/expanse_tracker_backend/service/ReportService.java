@@ -1,7 +1,7 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
 
 import com.amar.fullstack.expanse_tracker_backend.entity.ReportType;
-import com.amar.fullstack.expanse_tracker_backend.entity.*;
+import com.amar.fullstack.expanse_tracker_backend.exception.InvalidFormatException;
 import com.amar.fullstack.expanse_tracker_backend.strategy.ReportStrategy;
 import com.amar.fullstack.expanse_tracker_backend.strategy.ReportStrategyFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,6 @@ public class ReportService {
         } else if (format.equalsIgnoreCase("pdf")) {
             return strategy.generatePdf(userId);
         }
-
-        throw new RuntimeException("Invalid format");
+        throw new InvalidFormatException("Unsupported format. Only Excel and Pdf downloads are allowed");
     }
 }

@@ -31,10 +31,10 @@ public class OtpService {
     public void deleteOtp(String email){
         redisTemplate.delete("OTP:"+email);
     }
-
-    public void sendOtp(String email, String otp){
-        //System.out.println("OTP"+otp);
-    }
+//
+//    public void sendOtp(String email, String otp){
+//        //System.out.println("OTP"+otp);
+//    }
 
     public void saveUserData(RegisterRequest request){
         String key="USER:"+request.getEmail();
@@ -53,7 +53,7 @@ public class OtpService {
             return false;
         }
         if (storedOtp.equals(otp)) {
-            redisTemplate.delete(key); // ✅ one-time use
+            redisTemplate.delete(key);
             return true;
         }
 

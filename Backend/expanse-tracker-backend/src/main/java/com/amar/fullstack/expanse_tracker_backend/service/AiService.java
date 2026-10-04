@@ -1,9 +1,16 @@
 package com.amar.fullstack.expanse_tracker_backend.service;
 
+import io.netty.resolver.DefaultAddressResolverGroup;
+import kotlin.random.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
+import reactor.netty.http.client.HttpClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -12,13 +19,17 @@ import java.util.Map;
 public class AiService {
 
     private final WebClient webClient;
+    private final Logger logger= LoggerFactory.getLogger(AiService.class);
 
     @Value("${openrouter.api.key}")
     private String apiKey;
 
     public AiService(WebClient.Builder builder) {
+        HttpClient httpClient= HttpClient.create()
+                .resolver(DefaultAddressResolverGroup.INSTANCE);
         this.webClient = builder
                 .baseUrl("https://openrouter.ai/api/v1")
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
 
@@ -116,15 +127,12 @@ public class AiService {
                 return "AI response unavailable";
             }
 
-            // Remove markdown formatting if returned by the model
             result = result
                     .replace("```", "")
                     .replace("**", "")
                     .trim();
 
-            // Prevent accidental thinking/reasoning output
             if (result.startsWith("Here's a thinking process")
-                    || result.startsWith("Here is a thinking process")
                     || result.startsWith("Thinking process:")
                     || result.startsWith("Let me analyze")
                     || result.startsWith("I need to analyze")
@@ -136,10 +144,8 @@ public class AiService {
             return result;
 
         } catch (Exception e) {
-
-            System.err.println("AI Service Error: " + e.getMessage());
-
-            return "AI response unavailable";
+            logger.error("Ai service failed :{}",e.getMessage(),e);
+            return "Please try asking question again.";
         }
     }
 }

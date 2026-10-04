@@ -114,6 +114,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<ErrorResponseDto> handlerInvalidFormat(InvalidFormatException ex, HttpServletRequest request){
+
+        logger.warn("Unexpected error: {}", ex.getMessage(), ex);
+        ErrorResponseDto error=new ErrorResponseDto(
+                "Invalid format provided. Please check your input.",
+                HttpStatus.BAD_REQUEST.value(),
+                request.getRequestURI()
+
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGlobal(
             Exception ex,

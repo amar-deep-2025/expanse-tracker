@@ -90,7 +90,6 @@ public class PaymentService {
             user.setPremium(true);
             userRepository.save(user);
 
-            // ✅ SUCCESS NOTIFICATION
             NotificationRequest notify = new NotificationRequest();
             notify.setEmail(user.getEmail());
             notify.setPhone(user.getPhone());
@@ -120,7 +119,6 @@ public class PaymentService {
             return "Payment SUCCESS";
         }
 
-        // ❌ FAILED CASE
         payment.setStatus(PaymentStatus.FAILED);
         paymentRepository.save(payment);
 

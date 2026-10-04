@@ -40,8 +40,6 @@ public class BudgetService {
         this.expanseRepo = expanseRepo;
         this.notificationService = notificationService;
     }
-
-    // ✅ CREATE BUDGET
     public BudgetResponseDto createBudget(Long userId, BudgetRequestDto dto) {
 
         logger.info("Creating budget for userId={}", userId);
@@ -53,7 +51,6 @@ public class BudgetService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
-        // 🔥 FIXED duplicate check
         boolean exists;
 
         if (dto.getType() == BudgetType.OVERALL) {
@@ -86,7 +83,6 @@ public class BudgetService {
         Budget budget = budgetMapper.toEntity(dto);
         budget.setUser(user);
 
-        // ✅ CATEGORY handling
         if (dto.getType() == BudgetType.CATEGORY) {
 
             ExpanseCategory category = categoryRepo
@@ -103,13 +99,11 @@ public class BudgetService {
             budget.setCategory(null);
         }
 
-        // 🔥 SAVE
         Budget saved = budgetRepo.save(budget);
         logger.info("Budget saved successfully with id={}", saved.getId());
 
         BudgetResponseDto responseDto = budgetMapper.toDto(saved);
 
-        // 🔥 Notification
         if (isWarning) {
             logger.warn("Budget exceeds income userId={}", userId);
             responseDto.setWarning("Budget exceeds your income");
@@ -119,7 +113,6 @@ public class BudgetService {
         return responseDto;
     }
 
-    // ✅ GET ALL
     @Transactional(readOnly = true)
     public List<BudgetResponseDto> getAllBudgets(Long userId) {
         return budgetRepo.findByUserIdOrderByYearDescMonthDesc(userId)
@@ -128,7 +121,6 @@ public class BudgetService {
                 .toList();
     }
 
-    // ✅ GET BY ID
     @Transactional(readOnly = true)
     public BudgetResponseDto getBudgetById(Long id, Long userId) {
         Budget budget = budgetRepo.findByIdAndUserId(id, userId)
@@ -136,7 +128,6 @@ public class BudgetService {
         return budgetMapper.toDto(budget);
     }
 
-    // ✅ DELETE
     public void deleteBudget(Long id, Long userId) {
         Budget budget = budgetRepo.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
@@ -145,7 +136,6 @@ public class BudgetService {
         logger.info("Budget deleted id={}", id);
     }
 
-    // ✅ UPDATE
     public BudgetResponseDto updateBudget(Long id, Long userId, BudgetRequestDto dto) {
 
         validateYear(dto.getYear());
@@ -176,7 +166,6 @@ public class BudgetService {
         return budgetMapper.toDto(updated);
     }
 
-    // ✅ NOTIFICATION
     private void sendBudgetAlert(User user, double budget, double income) {
 
         try {
@@ -206,7 +195,6 @@ public class BudgetService {
         }
     }
 
-    // ✅ VALIDATIONS
     private void validateCategoryRule(BudgetRequestDto dto) {
         if (dto.getType() == BudgetType.CATEGORY
                 && dto.getCategoryId() == null) {

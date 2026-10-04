@@ -1,0 +1,7 @@
+package com.amar.fullstack.expanse_tracker_backend.exception;
+
+public class InvalidFormatException extends RuntimeException {
+    public InvalidFormatException(String message) {
+        super(message);
+    }
+}

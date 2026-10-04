@@ -81,4 +81,15 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    public boolean validateResetToken(String token, User user) {
+        try {
+            Claims claims = extractClaims(token);
+
+            return "RESET".equals(claims.get("type", String.class))
+                    && user.getEmail().equals(claims.getSubject())
+                    && claims.getExpiration().after(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

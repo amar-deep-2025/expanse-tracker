@@ -69,7 +69,6 @@ public class AuthService {
         notify.setEmail(request.getEmail());
         notify.setPhone(request.getPhone());
 
-        // EMAIL (professional)
         notify.setMessage(
                 "Hello,\n\n" +
                         "Thank you for registering with Expanse Tracker.\n\n" +
@@ -99,25 +98,25 @@ public class AuthService {
         String otpKey="REGISTER: "+request.getEmail();
         String storedOtp = otpService.getOtp(otpKey);
         if (storedOtp == null){
-            throw new RuntimeException("OTP Expired");
+            throw new InvalidCredentialsExceptions("OTP Expired");
         }
         if (!storedOtp.equals(request.getOtp())){
-            throw new RuntimeException("Invalid Otp");
+            throw new InvalidCredentialsExceptions("Invalid Otp");
         }
 
         String data = redisTemplate.opsForValue()
                 .get("USER:" + request.getEmail());
 
         if (data == null){
-            throw new RuntimeException("User data not found");
+            throw new ResourceNotFoundException("User data not found");
         }
 
-        String[] parts = data.split(",", 4); // safe split
+        String[] parts = data.split(",", 4);
 
         User user = new User();
         user.setName(parts[0]);
         user.setEmail(parts[1]);
-        user.setPassword(parts[2]); // already encoded
+        user.setPassword(parts[2]);
         user.setPhone(parts[3]);
 
         userRepo.save(user);
@@ -177,7 +176,7 @@ public class AuthService {
                 user.getRole().name());
     }
 
-    public String forgotPassword(String email) {
+    public void forgotPassword(String email) {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warn("Forgot password failed - email not found: {}", email);
@@ -209,17 +208,19 @@ public class AuthService {
         notificationService.send(notify);
 
         logger.info("Reset password link sent to email: {}", email);
-        return token;
     }
 
     public void resetPassword(ResetPasswordRequest request) {
+        if (!jwtUtil.validateToken(request.getToken())){
+            throw new InvalidCredentialsExceptions("Reset token is invalid or expired");
+        }
         String email = jwtUtil.extractEmail(request.getToken());
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warn("Reset password failed - email not found: {}", email);
                     return new InvalidCredentialsExceptions("Invalid token");
                 });
-        if (!jwtUtil.validateToken(request.getToken(), user)) {
+        if (!jwtUtil.validateResetToken(request.getToken(), user)) {
             throw new InvalidCredentialsExceptions("Token expired or invalid");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));

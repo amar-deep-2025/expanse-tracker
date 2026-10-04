@@ -28,8 +28,7 @@ public class DashboardService {
     private final Logger log=LoggerFactory.getLogger(DashboardService.class);
     public DashboardService(ExpanseRepository expRepo, BudgetRepository budgetRepo,
                             AiFacadeService aiFacadeService,
-                            UserRepository userRepo,
-                            LoggerFactory log) {
+                            UserRepository userRepo) {
         this.expRepo = expRepo;
         this.budgetRepo = budgetRepo;
         this.aiFacadeService = aiFacadeService;

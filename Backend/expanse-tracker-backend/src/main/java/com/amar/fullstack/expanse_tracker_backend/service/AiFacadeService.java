@@ -18,58 +18,22 @@ public class AiFacadeService {
         Double totalIncome = data.getTotalIncome();
         Double balance = data.getBalance();
 
+
         if (totalExpense == null || totalIncome == null || balance == null) {
             return "Your financial insight is currently unavailable.";
         }
 
-        if (data.getCategorySummary() != null
-                && !data.getCategorySummary().isEmpty()) {
-
-            String highestCategory = data.getCategorySummary()
-                    .entrySet()
-                    .stream()
-                    .max(java.util.Map.Entry.comparingByValue())
-                    .map(java.util.Map.Entry::getKey)
-                    .orElse(null);
-
-            Double highestAmount = highestCategory != null
-                    ? data.getCategorySummary().get(highestCategory)
-                    : 0.0;
-
-            if (highestCategory != null && highestAmount > 0) {
-
-                String categoryName = highestCategory.substring(0, 1).toUpperCase()
-                        + highestCategory.substring(1);
-
-                return String.format(
-                        "Your highest expense category is %s at ₹%.0f, so reviewing this category could help improve your savings.",
-                        categoryName,
-                        highestAmount
-                );
-            }
-        }
-
-        if (balance > 0) {
-            return String.format(
-                    "You currently have a positive balance of ₹%.0f, so maintaining your spending within your budget can help preserve your savings.",
-                    balance
-            );
-        }
-
-        return "Reviewing your recent expenses and budget can help you manage your finances more effectively.";
+        return String.format("Your income is ₹%.0f | Your Expense is ₹%.0f | Your Balance is ₹%.0f", totalIncome, totalExpense, balance);
     }
     private String cleanInsight(String result) {
 
         String insight = result.trim();
 
-        // Remove markdown
         insight = insight
                 .replace("**", "")
                 .replace("```", "")
                 .trim();
 
-        // If model still returns multiple lines,
-        // keep only the first meaningful line.
         String[] lines = insight.split("\\r?\\n");
 
         for (String line : lines) {
@@ -88,7 +52,6 @@ public class AiFacadeService {
             }
         }
 
-        // Remove accidental quotation marks
         insight = insight
                 .replaceAll("^\"|\"$", "")
                 .trim();
@@ -102,6 +65,24 @@ public class AiFacadeService {
             String prompt,
             DashboardResponse dashboardData
     ) {
+        String question=prompt.toLowerCase().trim();
+
+        if (question.contains("total expense")|| question.contains("how much did i spend")){
+            return String.format("Your total expenses are ₹%.2f.", dashboardData.getTotalExpense());
+        }
+        if(question.contains("total income")|| question.contains("how much did i earn")||question.contains("what is my total income")){
+            return String.format("Your total income is ₹%.2f.", dashboardData.getTotalIncome());
+        }
+        if (question.contains("total budget") || question.contains("how much my total budget") || question.contains("what is my total budget")){
+            return String.format("Your total budget is ₹%.2f.", dashboardData.getTotalBudget());
+        }
+        if (question.contains("budget remaining") || question.contains("What is my remaining budget")){
+            return String.format("Your remaining budget is ₹%.2f.", dashboardData.getBudgetRemaining());
+        }
+        if (question.contains("today's expense") || question.contains("how much did i spend today")||question.contains("what is my today's expense")){
+            return String.format("Your today's expenses are ₹%.2f.", dashboardData.getTodayExpense());
+        }
+
 
         String data = """
                 Financial Dashboard Data:
